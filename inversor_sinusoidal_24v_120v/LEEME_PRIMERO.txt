@@ -1,0 +1,364 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║          INVERSOR DE ONDA SINUSOIDAL PURA 24V DC → 120V AC              ║
+║                   Proyecto Arduino con Transformador de Ferrita          ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+BIENVENIDO AL PROYECTO
+═══════════════════════════════════════════════════════════════════════════
+
+Este es un proyecto COMPLETO para construir un inversor de onda sinusoidal 
+pura de alta frecuencia usando Arduino. El sistema convierte 24V DC a 120V AC
+mediante modulación SPWM y un transformador de ferrita.
+
+
+CONTENIDO DEL PROYECTO
+═══════════════════════════════════════════════════════════════════════════
+
+📄 inversor_sinusoidal_24v_120v.ino  ← ★ CÓDIGO PRINCIPAL ARDUINO
+   └─ Implementación básica y funcional del inversor
+   └─ Generación SPWM con 256 muestras por ciclo
+   └─ Control de puente H completo
+   └─ Frecuencia PWM: 31.25 kHz
+
+📄 MEJORAS_AVANZADAS.ino  ← ★ VERSIÓN AVANZADA CON PROTECCIONES
+   └─ Control PID de voltaje
+   └─ Protección de sobrecorriente y temperatura
+   └─ Display LCD con información en tiempo real
+   └─ Soft-start y apagado suave
+   └─ Múltiples estados de operación
+
+📖 README.md  ← ★ DOCUMENTACIÓN COMPLETA
+   └─ Descripción del proyecto
+   └─ Lista de componentes necesarios
+   └─ Diagrama de conexiones
+   └─ Instrucciones de configuración y calibración
+   └─ Solución de problemas
+   └─ Mejoras posibles
+
+📋 COMPONENTES.md  ← ★ LISTA DETALLADA DE COMPRAS
+   └─ Componentes organizados por categoría
+   └─ Especificaciones técnicas
+   └─ Precios aproximados
+   └─ Proveedores recomendados
+   └─ Herramientas necesarias
+   └─ Resumen de costos ($85-160 USD)
+
+🔌 ESQUEMAS_CIRCUITO.txt  ← ★ DIAGRAMAS ASCII
+   └─ Diagrama general del sistema
+   └─ Esquema del puente H completo
+   └─ Circuito driver IR2110
+   └─ Filtro LC de salida
+   └─ Conexiones Arduino completas
+   └─ Layout PCB recomendado
+   └─ Calibres de cable
+
+📐 CALCULOS_DISEÑO.md  ← ★ MATEMÁTICAS Y DIMENSIONAMIENTO
+   └─ Cálculos de potencia y corrientes
+   └─ Diseño del transformador de ferrita
+   └─ Cálculo de espiras y calibres
+   └─ Pérdidas y eficiencia
+   └─ Disipación térmica
+   └─ Diseño del filtro LC
+   └─ Fórmulas de referencia
+
+
+INICIO RÁPIDO - ¿POR DÓNDE EMPEZAR?
+═══════════════════════════════════════════════════════════════════════════
+
+1. ENTENDER EL PROYECTO (15 minutos)
+   ├─ Leer: README.md (sección "Descripción" y "Características")
+   ├─ Ver: ESQUEMAS_CIRCUITO.txt (Diagrama general)
+   └─ Revisar: COMPONENTES.md (Resumen de costos)
+
+2. PLANIFICAR LA CONSTRUCCIÓN (30 minutos)
+   ├─ Estudiar: COMPONENTES.md (lista completa)
+   ├─ Calcular: CALCULOS_DISEÑO.md (según tu potencia deseada)
+   └─ Decidir: ¿Básico o Avanzado?
+
+3. COMPRAR COMPONENTES (1-2 semanas)
+   ├─ Lista: COMPONENTES.md (con proveedores)
+   ├─ Prioridad: MOSFETs, drivers, Arduino, núcleo ferrita
+   └─ Opcional: Sensores, LCD, caja
+
+4. CONSTRUIR EL HARDWARE (2-3 días)
+   ├─ Seguir: ESQUEMAS_CIRCUITO.txt (todas las conexiones)
+   ├─ Atención: Respetar polaridades y aislamientos
+   └─ Verificar: Conexiones con multímetro
+
+5. PROGRAMAR ARDUINO (30 minutos)
+   ├─ Código básico: inversor_sinusoidal_24v_120v.ino
+   ├─ Código avanzado: MEJORAS_AVANZADAS.ino (recomendado)
+   └─ Instalar librerías: LiquidCrystal_I2C (si usas LCD)
+
+6. PROBAR Y CALIBRAR (1 día)
+   ├─ Guía: README.md (sección "Configuración y Calibración")
+   ├─ Paso 1: Sin carga (verificar señales)
+   ├─ Paso 2: Con carga ligera (25W)
+   └─ Paso 3: Incrementar carga gradualmente
+
+
+VERSIONES DEL CÓDIGO
+═══════════════════════════════════════════════════════════════════════════
+
+VERSIÓN BÁSICA (inversor_sinusoidal_24v_120v.ino)
+─────────────────────────────────────────────────
+✓ Funcional y probado
+✓ Código simple, fácil de entender
+✓ Generación SPWM estable
+✓ Control on/off con botón
+✗ Sin protecciones automáticas
+✗ Sin feedback de voltaje
+✗ Sin display de información
+
+USAR SI:
+→ Es tu primer inversor
+→ Quieres entender el funcionamiento básico
+→ No necesitas monitoreo avanzado
+→ Presupuesto limitado (no requiere LCD ni sensores)
+
+
+VERSIÓN AVANZADA (MEJORAS_AVANZADAS.ino)
+─────────────────────────────────────────
+✓ Todas las funciones de versión básica +
+✓ Control PID de voltaje de salida
+✓ Protección de sobrecorriente automática
+✓ Protección térmica
+✓ Soft-start (arranque suave)
+✓ Display LCD 16×2 con info en tiempo real
+✓ Alarma sonora de errores
+✓ Máquina de estados completa
+✓ Monitoreo de batería
+✓ Cálculo de potencia
+
+USAR SI:
+→ Necesitas un inversor confiable para uso real
+→ Quieres protección de tus componentes
+→ Vas a conectar cargas sensibles
+→ Quieres ver voltaje, corriente, temperatura
+→ Presupuesto permite sensores y LCD (+$10-15)
+
+
+ESPECIFICACIONES TÉCNICAS
+═══════════════════════════════════════════════════════════════════════════
+
+Entrada:                24V DC (rango: 22-28V)
+Salida:                 120V AC, 60Hz (configurable a 50Hz)
+Potencia:               250W - 1500W (según componentes)
+Forma de onda:          Sinusoidal pura (THD < 5%)
+Frecuencia PWM:         31.25 kHz (óptimo para ferrita)
+Topología:              Puente H completo (Full-Bridge)
+Modulación:             SPWM (256 muestras/ciclo)
+Eficiencia:             85-90% (típica: 88%)
+Protecciones:           Sobrecorriente, térmica, bajo voltaje
+
+
+POTENCIAS RECOMENDADAS
+═══════════════════════════════════════════════════════════════════════════
+
+🔋 250W  → Computadora portátil, TV LED, ventilador
+🔋 500W  → Computadora desktop, licuadora, microondas pequeño
+🔋 1000W → Herramientas eléctricas, bomba de agua, refrigerador
+🔋 1500W → Microondas grande, aire acondicionado portátil
+
+
+CARGAS COMPATIBLES
+═══════════════════════════════════════════════════════════════════════════
+
+✓ Electrónica (computadoras, TVs, cargadores)
+✓ Motores de inducción (ventiladores, bombas)
+✓ Iluminación (LED, fluorescente, incandescente)
+✓ Electrodomésticos (licuadora, microondas)
+✓ Herramientas eléctricas (taladro, sierra)
+
+⚠ Cargas inductivas grandes pueden requerir filtrado adicional
+⚠ Motores con arranque pesado pueden causar caída de voltaje
+
+
+ADVERTENCIAS DE SEGURIDAD ⚠️
+═══════════════════════════════════════════════════════════════════════════
+
+⚡ 120V AC PUEDE SER LETAL - Tomar todas las precauciones
+⚡ Usar transformador con AISLAMIENTO ADECUADO (mínimo 3kV)
+⚡ Instalar FUSIBLES en entrada y salida
+⚡ NO operar sin DISIPADORES y VENTILACIÓN adecuada
+⚡ Probar SIEMPRE primero SIN CARGA
+⚡ Usar CAJA/GABINETE con toma de tierra
+⚡ NO tocar circuitos energizados
+⚡ Mantener ALEJADO de niños y mascotas
+
+
+SOPORTE Y RECURSOS
+═══════════════════════════════════════════════════════════════════════════
+
+Documentación:
+└─ Todos los archivos incluidos en esta carpeta
+
+Herramientas recomendadas:
+├─ Arduino IDE 1.8.x o superior
+├─ Multímetro digital
+├─ Osciloscopio (altamente recomendado)
+└─ Soldador con control de temperatura
+
+Comunidad Arduino:
+├─ https://forum.arduino.cc/
+├─ https://www.reddit.com/r/arduino/
+└─ Grupos locales de makers
+
+
+ORDEN DE LECTURA SUGERIDO
+═══════════════════════════════════════════════════════════════════════════
+
+Para principiantes:
+1. README.md
+2. ESQUEMAS_CIRCUITO.txt (Diagrama general)
+3. COMPONENTES.md
+4. Código: inversor_sinusoidal_24v_120v.ino
+
+Para usuarios intermedios/avanzados:
+1. README.md (rápido, ya conoces el concepto)
+2. CALCULOS_DISEÑO.md (para optimizar tu diseño)
+3. ESQUEMAS_CIRCUITO.txt (todos los detalles)
+4. COMPONENTES.md (especificaciones exactas)
+5. Código: MEJORAS_AVANZADAS.ino
+
+Para estudiantes/aprendizaje:
+1. README.md (conceptos básicos)
+2. CALCULOS_DISEÑO.md (teoría y matemáticas)
+3. ESQUEMAS_CIRCUITO.txt (implementación)
+4. Ambos archivos .ino (comparar básico vs avanzado)
+
+
+PREGUNTAS FRECUENTES
+═══════════════════════════════════════════════════════════════════════════
+
+P: ¿Puedo usar este código con Arduino Uno?
+R: Sí, es compatible con Arduino Uno, Nano y Mega.
+
+P: ¿Funciona con 12V en lugar de 24V?
+R: Sí, pero debes recalcular el transformador y la corriente será el doble.
+
+P: ¿Puedo cambiar la frecuencia de salida a 50Hz?
+R: Sí, cambiar SINE_FREQ de 60 a 50 en el código.
+
+P: ¿Qué potencia máxima puedo lograr?
+R: Con los componentes listados, hasta 500-1000W. Para más, paralelizar MOSFETs.
+
+P: ¿Necesito el osciloscopio obligatoriamente?
+R: No es obligatorio, pero MUY recomendado para verificar forma de onda.
+
+P: ¿Dónde consigo el núcleo de ferrita ETD49?
+R: AliExpress, eBay, o proveedores locales de electrónica industrial.
+
+P: ¿Puedo usar un transformador de ferrita reciclado?
+R: Posible, pero difícil. Necesitas conocer especificaciones exactas.
+
+P: El inversor se calienta mucho, ¿es normal?
+R: Los MOSFETs deben estar tibios-calientes. Si queman, mejorar disipación.
+
+
+CHECKLIST DE CONSTRUCCIÓN
+═══════════════════════════════════════════════════════════════════════════
+
+ANTES DE COMENZAR:
+☐ Leí toda la documentación
+☐ Tengo todos los componentes
+☐ Tengo las herramientas necesarias
+☐ Entiendo los riesgos de seguridad
+☐ Tengo espacio de trabajo adecuado
+
+DURANTE LA CONSTRUCCIÓN:
+☐ Soldaduras limpias y firmes
+☐ Polaridad correcta de electrolíticos
+☐ Diodos en dirección correcta
+☐ MOSFETs con disipadores
+☐ Paste térmica aplicada
+☐ Conexiones de potencia robustas (cable grueso)
+☐ Conexiones de señal alejadas de potencia
+☐ Fusibles instalados
+☐ Transformador bien aislado
+
+ANTES DE LA PRIMERA PRUEBA:
+☐ Verifiqué todas las conexiones
+☐ No hay cortocircuitos
+☐ Voltaje de alimentación correcto
+☐ Arduino programado correctamente
+☐ Osciloscopio conectado (si disponible)
+☐ NO hay carga conectada
+☐ Área de trabajo despejada
+☐ Extintor cerca (seriamente)
+
+PRUEBAS PROGRESIVAS:
+☐ Prueba 1: Arduino solo (sin drivers/MOSFETs)
+☐ Prueba 2: Con drivers (sin MOSFETs de potencia)
+☐ Prueba 3: Con MOSFETs (sin transformador)
+☐ Prueba 4: Con transformador (sin carga)
+☐ Prueba 5: Con carga ligera (25W)
+☐ Prueba 6: Incrementar carga gradualmente
+
+
+SOLUCIÓN RÁPIDA DE PROBLEMAS
+═══════════════════════════════════════════════════════════════════════════
+
+❌ No hay salida de voltaje
+   → Verificar señales PWM con osciloscopio
+   → Revisar conexiones de drivers
+   → Comprobar alimentación de drivers (12-15V)
+
+❌ Voltaje de salida bajo
+   → Aumentar amplitudeScale en código
+   → Verificar espiras del transformador
+   → Revisar conexiones del puente H
+
+❌ MOSFETs se calientan excesivamente
+   → Mejorar disipación (más grande o ventilador)
+   → Reducir DEAD_TIME si hay co-conducción
+   → Usar MOSFETs de menor RDS(on)
+
+❌ Forma de onda distorsionada
+   → Ajustar filtro LC (aumentar L o C)
+   → Verificar carga (puede ser no lineal)
+   → Revisar frecuencia PWM
+
+❌ Arduino se resetea al encender
+   → Interferencia electromagnética
+   → Agregar filtros en alimentación Arduino
+   → Separar físicamente control y potencia
+
+Para más detalles: Ver sección "Solución de Problemas" en README.md
+
+
+DISCLAIMER Y LICENCIA
+═══════════════════════════════════════════════════════════════════════════
+
+Este proyecto es educativo y de código abierto. El autor NO se hace 
+responsable por:
+- Daños a personas o propiedades
+- Mal funcionamiento del equipo
+- Daños a cargas conectadas
+- Incumplimiento de regulaciones locales
+
+CONSTRUIR Y USAR BAJO TU PROPIO RIESGO.
+
+Solo debe ser construido por personas con experiencia en electrónica de
+potencia y respetando TODAS las normas de seguridad.
+
+Asegúrate de que tu construcción cumpla con las regulaciones eléctricas
+locales antes de usarla con cargas reales o conectarla a la red.
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+              ¡BUENA SUERTE CON TU PROYECTO!
+              
+   Si tienes preguntas, consulta la documentación completa incluida.
+   
+   Recuerda: La seguridad es lo primero. Siempre.
+
+═══════════════════════════════════════════════════════════════════════════
+
+Versión: 1.0
+Fecha: Noviembre 2025
+Proyecto: Inversor Sinusoidal Pura Arduino 24V→120V

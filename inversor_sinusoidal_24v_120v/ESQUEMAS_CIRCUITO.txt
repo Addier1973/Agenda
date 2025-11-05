@@ -1,0 +1,387 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                 ESQUEMAS DE CIRCUITO DETALLADOS                            ║
+║          INVERSOR SINUSOIDAL PURA 24V DC → 120V AC                         ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════
+1. DIAGRAMA GENERAL DEL SISTEMA
+═══════════════════════════════════════════════════════════════════════════════
+
+    ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+    │   Batería    │      │  Filtro de   │      │   Puente H   │
+    │    24V DC    │─────▶│   Entrada    │─────▶│  (4 MOSFETs) │
+    │              │      │   (Caps)     │      │              │
+    └──────────────┘      └──────────────┘      └──────┬───────┘
+                                                        │
+                                                        ▼
+    ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+    │    Carga     │      │  Filtro LC   │      │Transformador │
+    │   120V AC    │◀─────│   Salida     │◀─────│   Ferrita    │
+    │              │      │              │      │  (HF 31kHz)  │
+    └──────────────┘      └──────────────┘      └──────────────┘
+                                                        ▲
+                                                        │
+    ┌──────────────┐      ┌──────────────┐      ┌──────┴───────┐
+    │   Displays   │◀─────│   Arduino    │─────▶│   Drivers    │
+    │   (LCD/LED)  │      │  (Control)   │      │  (IR2110×2)  │
+    └──────────────┘      └──────────────┘      └──────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+2. PUENTE H COMPLETO (H-BRIDGE) - TOPOLOGÍA DE POTENCIA
+═══════════════════════════════════════════════════════════════════════════════
+
+                            +24V DC Input
+                                 │
+                   ┌─────────────┴─────────────┐
+                   │                           │
+                   │                           │
+              ┌────┴────┐                 ┌────┴────┐
+              │   Q1    │                 │   Q3    │
+              │IRF3205  │                 │IRF3205  │
+              │ (HS-A)  │                 │ (HS-B)  │
+              └────┬────┘                 └────┬────┘
+                   │                           │
+                   │       ┌─────────┐         │
+                   ├───────┤    A    ├─────────┤
+                   │       │         │         │
+                   │       │ TRANS-  │         │
+                   │       │ FORMA-  │         │
+                   │       │  DOR    │         │
+                   │       │ FERRITA │         │
+                   │       │    B    │         │
+                   ├───────┤         ├─────────┤
+                   │       └─────────┘         │
+              ┌────┴────┐                 ┌────┴────┐
+              │   Q2    │                 │   Q4    │
+              │IRF3205  │                 │IRF3205  │
+              │ (LS-A)  │                 │ (LS-B)  │
+              └────┬────┘                 └────┬────┘
+                   │                           │
+                   └─────────────┬─────────────┘
+                                 │
+                              GND/0V
+
+Nomenclatura:
+HS-A = High-Side Brazo A    Q1: Pin 9 (Arduino)
+LS-A = Low-Side Brazo A     Q2: Pin 10 (Arduino)
+HS-B = High-Side Brazo B    Q3: Pin 3 (Arduino)
+LS-B = Low-Side Brazo B     Q4: Pin 11 (Arduino)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+3. CIRCUITO DRIVER IR2110 (Por cada brazo del Puente H)
+═══════════════════════════════════════════════════════════════════════════════
+
+Driver para Brazo A (Requiere 1× IR2110):
+─────────────────────────────────────────
+
+                        +15V (VCC para driver)
+                          │
+                          ├──────────┐
+                          │          │
+                       10µF/25V   ┌──┴──┐
+                          │       │     │
+                          │       │  D1 │ UF4007 (Bootstrap Diode)
+                          │       │     │
+                          │       └──┬──┘
+                          │          │
+    ┌──────────────────────────────────────────────┐
+    │               IR2110 / IR2184                │
+    │                                              │
+    │  VCC    VB    VS    HO    LO    COM   VDD   │
+    └───┬─────┬─────┬─────┬─────┬─────┬─────┬────┘
+        │     │     │     │     │     │     │
+       +15V   │     │     │     │    GND   +15V
+              │     │     │     │
+           10µF │     │     │     └─────────┐ 10Ω
+        (Boot) │     │     │               │
+              ├┘     │     │          ┌────┴───┐
+              │      │     │          │ Gate   │
+         ┌────┴──────┤     │          │  Q2    │
+         │           │     │          │ (LS-A) │
+    Arduino Pin 9 ──▶│HIN  │          └────────┘
+         │           │     │
+    Arduino Pin 10──▶│LIN  │
+         │           │     └────────────┐ 10Ω
+         │           │                  │
+        GND          │             ┌────┴───┐
+                     │             │ Gate   │
+                     │             │  Q1    │
+                  Source Q1        │ (HS-A) │
+                  (Nodo A)         └────────┘
+                     │
+                     └─────────── A (al Transformador)
+
+Componentes Bootstrap:
+- Capacitor Bootstrap: 10µF/25V (conectado entre VB y VS)
+- Diodo Bootstrap: UF4007 (desde VCC a VB)
+- Resistores de Gate: 10Ω (limitan corriente de carga del gate)
+
+Repetir circuito idéntico para Brazo B con:
+- Arduino Pin 3 → HIN (Q3, HS-B)
+- Arduino Pin 11 → LIN (Q4, LS-B)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+4. CIRCUITO DE ENTRADA (Filtrado y Protección)
+═══════════════════════════════════════════════════════════════════════════════
+
+    +24V ──┬──[FUSIBLE 30A]──┬───[C1]───┬───[C2]───┬──▶ +24V a Puente H
+           │                 │ 2200µF   │ 2200µF   │
+           │                 │  50V     │  50V     │
+          ┌┴┐               ─┴─        ─┴─         │
+          │ │ MOV           ─┬─        ─┬─         │
+          │ │ 36V           │          │          │
+          └┬┘               │          │         ┌┴┐ 100nF
+           │                │          │         │ │ (Cerámico×4)
+    GND ───┴────────────────┴──────────┴─────────┴┴──▶ GND
+
+Componentes:
+- MOV (Varistor): Protección contra sobrevoltaje (36V para sistema 24V)
+- C1, C2: Capacitores 2200µF/50V - Filtro y almacenamiento de energía
+- Capacitores cerámicos 100nF: Cerca de cada MOSFET para HF
+
+
+═══════════════════════════════════════════════════════════════════════════════
+5. TRANSFORMADOR DE FERRITA (Detalles de Construcción)
+═══════════════════════════════════════════════════════════════════════════════
+
+Vista del Bobinado (Núcleo ETD49):
+
+    ╔═══════════════════════════════════╗
+    ║                                   ║
+    ║   ╔═══════════════════════════╗   ║  ← Núcleo superior
+    ║   ║                           ║   ║
+    ║   ║    ┌─────────────────┐    ║   ║
+    ║   ║    │ SECUNDARIO      │    ║   ║
+    ║   ║    │ 45 espiras      │    ║   ║
+    ║   ║    │ AWG24           │    ║   ║
+    ║   ║    │ (120V)          │    ║   ║
+    ║   ║    └─────────────────┘    ║   ║
+    ║   ║         [Cinta aislante]  ║   ║
+    ║   ║    ┌─────────────────┐    ║   ║
+    ║   ║    │ PRIMARIO        │    ║   ║
+    ║   ║    │ 9 espiras       │    ║   ║
+    ║   ║    │ AWG18 Litz      │    ║   ║
+    ║   ║    │ (24V)           │    ║   ║
+    ║   ║    └─────────────────┘    ║   ║
+    ║   ║           Bobbin          ║   ║
+    ║   ╚═══════════════════════════╝   ║
+    ║                                   ║
+    ╚═══════════════════════════════════╝  ← Núcleo inferior
+
+Terminales del Transformador:
+Primario:  [A] ────┐
+                   ├──── Conectar al Puente H
+Primario:  [B] ────┘
+
+Secundario: [1] ────┐
+                    ├──── 120V AC (al filtro)
+Secundario: [2] ────┘
+
+Especificaciones de bobinado:
+1. Primario: 8-10 espiras, alambre Litz AWG18 (soporta alta corriente)
+2. Aislamiento: 3-4 capas de cinta Kapton entre primario y secundario
+3. Secundario: 40-50 espiras, alambre esmaltado AWG24
+4. Núcleo: Ferrita N87/N97, ETD49 para 500-1000W
+
+
+═══════════════════════════════════════════════════════════════════════════════
+6. FILTRO LC DE SALIDA
+═══════════════════════════════════════════════════════════════════════════════
+
+Del Transformador (HF):
+
+    120V~     ┌───[L1: 1mH]───┬─────[C1]─────┬──▶ Salida 120V AC
+    (31kHz)   │                │     2.2µF    │    (60Hz limpia)
+              │                │     250V     │
+              │                ├────[C2]──────┤
+              │                │    100nF     │
+    Neutro ───┴────────────────┴──────────────┴──▶ Neutral/GND
+                               │
+                              ┌┴┐ MOV
+                              │ │ 180V
+                              └┬┘
+                               │
+                              GND
+
+Componentes del Filtro:
+- L1: Inductor 1-2mH, corriente nominal 10A+
+      (Toroidal, núcleo de polvo de hierro)
+- C1: Capacitor 2.2µF/250V (Film, tipo X2)
+- C2: Capacitor 100nF/250V (Supresión de alta frecuencia)
+- MOV: Varistor 180V (protección sobretensión salida)
+
+Frecuencia de corte: fc = 1/(2π√(LC))
+                     fc = 1/(2π√(1mH × 2.2µF))
+                     fc ≈ 3.4 kHz
+
+Esto atenúa la frecuencia PWM (31kHz) dejando pasar solo 60Hz
+
+
+═══════════════════════════════════════════════════════════════════════════════
+7. CIRCUITO DE CONTROL ARDUINO (Conexiones completas)
+═══════════════════════════════════════════════════════════════════════════════
+
+                    ┌─────────────────────────┐
+                    │    ARDUINO NANO/UNO     │
+                    │                         │
+          +5V ──────┤ VIN                 D13 ├──── LED Status ──[220Ω]── GND
+                    │                         │
+          GND ──────┤ GND                 D12 ├──── (Libre)
+                    │                         │
+     [Button] ──────┤ D7 (Enable)        D11 ├──── PWM_B_LOW → Driver (Q4)
+      (Pull-up)     │                         │
+                    │                     D10 ├──── PWM_A_LOW → Driver (Q2)
+                    │                         │
+                    │                      D9 ├──── PWM_A_HIGH → Driver (Q1)
+                    │                         │
+   (Opcional)       │                      D3 ├──── PWM_B_HIGH → Driver (Q3)
+   Sensor V ────────┤ A0 (Analog)             │
+                    │                         │
+   Sensor I ────────┤ A1 (Analog)         A4  ├──── SDA (LCD I2C)
+                    │                         │
+   Temp ────────────┤ A2 (Analog)         A5  ├──── SCL (LCD I2C)
+                    │                         │
+                    └─────────────────────────┘
+
+Sensores Opcionales:
+- A0: Divisor resistivo para medir voltaje de salida (con optoacoplador)
+- A1: ACS712 para medir corriente de entrada
+- A2: NTC o DS18B20 para temperatura de disipadores
+
+
+═══════════════════════════════════════════════════════════════════════════════
+8. DISTRIBUCIÓN DE SEÑALES PWM (Forma de Onda)
+═══════════════════════════════════════════════════════════════════════════════
+
+Semiciclo Positivo (0° - 180°):
+────────────────────────────────
+
+Q1 (HS-A): ▁▁█▁█▁█▁█▁█▁█▁█▁██▁██▁███████▁██▁█▁█▁█▁█▁█▁█▁▁ (SPWM)
+Q2 (LS-A): ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ (OFF)
+
+Q3 (HS-B): ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ (OFF)
+Q4 (LS-B): ████████████████████████████████████████████ (ON)
+
+Corriente fluye: +24V → Q1 → A → Transformador → B → Q4 → GND
+
+
+Semiciclo Negativo (180° - 360°):
+──────────────────────────────────
+
+Q1 (HS-A): ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ (OFF)
+Q2 (LS-A): ████████████████████████████████████████████ (ON)
+
+Q3 (HS-B): ▁▁█▁█▁█▁█▁█▁█▁█▁██▁██▁███████▁██▁█▁█▁█▁█▁█▁█▁▁ (SPWM)
+Q4 (LS-B): ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ (OFF)
+
+Corriente fluye: +24V → Q3 → B → Transformador → A → Q2 → GND
+
+
+Voltaje en el Transformador (Primario):
+───────────────────────────────────────
+
+           +24V ┃           ║           ┃
+                ┃           ║           ┃
+                ┃           ║           ┃
+    0V ─────────┨═══════════╬═══════════┠─────────
+                            ║           ┃
+                            ║           ┃
+                            ║           ┃
+          -24V              ║           ┗━━━━━━━━━
+
+                ↑           ↑           ↑
+             Ciclo+1     Cruce cero   Ciclo-1
+
+La modulación SPWM crea pulsos de ancho variable que, 
+después del filtrado, resultan en una onda sinusoidal limpia.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+9. LAYOUT PCB RECOMENDADO (Vista Superior)
+═══════════════════════════════════════════════════════════════════════════════
+
+    ┌──────────────────────────────────────────────────────────┐
+    │                                                          │
+    │  [+24V IN]════════════════[FUSIBLE]════════[CAPs]       │
+    │     │                                         │          │
+    │     │         ┌─────────────┐                 │          │
+    │     │         │  DRIVER A   │                 │          │
+    │     │         │   IR2110    │                 │          │
+    │     │         └──────┬──────┘                 │          │
+    │     │                │                        │          │
+    │     ├────┬───────────┤                        │          │
+    │     │    │           │                        │          │
+    │  ┌──┴──┐ ├──┐     ┌──┴──┐                     │          │
+    │  │ Q1  │ │  │     │ Q2  │                     │          │
+    │  │HS-A │ │T │     │LS-A │                     │          │
+    │  └──┬──┘ │R │     └──┬──┘                     │          │
+    │     │    │A │        │                        │          │
+    │     ├────┤N ├────────┤                        │          │
+    │     │    │S │        │                        │          │
+    │  ┌──┴──┐ │F │     ┌──┴──┐                     │          │
+    │  │ Q3  │ │O │     │ Q4  │                     │          │
+    │  │HS-B │ │R │     │LS-B │                     │          │
+    │  └──┬──┘ │M │     └──┬──┘                     │          │
+    │     │    │A │        │                        │          │
+    │     │    │D │        │                        │          │
+    │     │    │O │        │         ┌─────────────┐│          │
+    │     │    │R │        │         │  DRIVER B   ││          │
+    │     │    └──┘        │         │   IR2110    ││          │
+    │     │                │         └──────┬──────┘│          │
+    │     │                │                │       │          │
+    │  [GND]══════════════════════════════════════════════     │
+    │                                                          │
+    │  [ARDUINO]─────[LCD]─────[SENSORES]───[CONECTORES]      │
+    │                                                          │
+    └──────────────────────────────────────────────────────────┘
+
+Recomendaciones de Layout:
+1. Pistas de potencia gruesas (mínimo 3mm ancho, 2oz cobre)
+2. Pistas de control alejadas de pistas de potencia
+3. Plano de tierra robusto
+4. Capacitores de desacople cerca de cada IC
+5. Mantener lazos de corriente lo más pequeños posible
+6. Separación física entre circuito de control y potencia
+
+
+═══════════════════════════════════════════════════════════════════════════════
+10. CALIBRES DE CABLE RECOMENDADOS
+═══════════════════════════════════════════════════════════════════════════════
+
+Conexión                  │ Corriente máx │ Calibre AWG │ Longitud máx
+──────────────────────────┼───────────────┼─────────────┼──────────────
+Batería 24V → Entrada     │    20-30A     │   AWG 10    │   2 metros
+Entrada → MOSFETs         │    20-30A     │   AWG 12    │   50 cm
+MOSFETs → Transformador   │    20-30A     │   AWG 12    │   30 cm
+Transformador → Filtro    │     5-10A     │   AWG 16    │   50 cm
+Filtro → Salida 120V      │     5-10A     │   AWG 14    │   1 metro
+Arduino → Drivers         │     <100mA    │   AWG 22-24 │   30 cm
+Tierra/GND                │    30A        │   AWG 10    │   Corto
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+NOTAS FINALES:
+─────────────
+
+1. Todos los esquemas son orientativos. Verificar datasheet de cada componente.
+
+2. Respetar polaridad de electrolíticos y diodos.
+
+3. Probar drivers y MOSFETs sin carga antes de conectar transformador.
+
+4. Usar osciloscopio para verificar señales PWM y tiempo muerto.
+
+5. Implementar protecciones de sobrecorriente y sobretensión.
+
+6. NUNCA operar sin disipadores y ventilación adecuada.
+
+7. ⚠️ 120V AC ES LETAL - Tomar todas las precauciones de seguridad.
+
+═══════════════════════════════════════════════════════════════════════════════
+Documento creado: Noviembre 2025
+Para: Proyecto Inversor Sinusoidal Pura 24V→120V
+═══════════════════════════════════════════════════════════════════════════════
