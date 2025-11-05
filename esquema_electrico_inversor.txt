@@ -1,0 +1,561 @@
+╔══════════════════════════════════════════════════════════════════════════════════════════╗
+║         ESQUEMA ELÉCTRICO - INVERSOR ONDA SINUSOIDAL PURA 24V → 120V AC                 ║
+║                    Transformador de Ferrita - Alta Frecuencia (20kHz)                   ║
+╚══════════════════════════════════════════════════════════════════════════════════════════╝
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                           SECCIÓN 1: ALIMENTACIÓN PRINCIPAL
+════════════════════════════════════════════════════════════════════════════════════════════
+
+    BATERÍA 24V DC
+         │
+         │
+    ┌────┴────┐
+    │ FUSIBLE │  40A (protección principal)
+    │  40A    │
+    └────┬────┘
+         │
+         ├──────────────────┐
+         │                  │
+    ┌────┴────┐        ┌────┴────────┐
+    │    +    │        │  CAPACITOR  │  Filtrado de entrada
+    │   24V   │        │   4700µF    │  (estabilización)
+    │    IN   │        │    35V      │
+    └────┬────┘        └────┬────────┘
+         │                  │
+         └──────────┬───────┘
+                    │
+                  [VDD] ─── Alimentación principal del H-Bridge
+                    │
+                  [GND] ─── Tierra principal
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                        SECCIÓN 2: H-BRIDGE (PUENTE COMPLETO)
+════════════════════════════════════════════════════════════════════════════════════════════
+
+                                    +24V (VDD)
+                                       │
+                    ┌──────────────────┼──────────────────┐
+                    │                  │                  │
+                    │                  │                  │
+              ┌─────┴─────┐            │          ┌─────┴─────┐
+              │           │            │          │           │
+              │   Q1      │            │          │   Q3      │
+              │ IRFZ44N   │            │          │ IRFZ44N   │
+              │ (High-A)  │            │          │ (High-B)  │
+              │           │            │          │           │
+         ┌────┤ D         │            │          │ D         ├────┐
+         │    │           │            │          │           │    │
+         │    │ G      S  │            │          │ G      S  │    │
+    [HO_A]    └───────┬───┘            │          └───┬───────┘   [HO_B]
+         │            │                │              │            │
+         │       ┌────┴────────────────┼──────────────┴────┐       │
+         │       │   [VS_A]            │           [VS_B]  │       │
+         │       │    (Punto medio A)  │     (Punto medio B)       │
+         │       │                     │                   │       │
+         │   ┌───┴───────────┐         │         ┌─────────┴───┐   │
+         │   │  PRIMARIO     │◄────────┴────────►│  PRIMARIO   │   │
+         │   │    DEL TX     │   (Transformador  │   DEL TX    │   │
+         │   │   FERRITA     │    de Ferrita)    │   FERRITA   │   │
+         │   │               │                   │             │   │
+         │   └───┬───────────┘                   └─────────┬───┘   │
+         │       │                                         │       │
+         │       │            ┌───────────┐                │       │
+         │       └────────────┤  Núcleo   ├────────────────┘       │
+         │                    │  Ferrita  │                        │
+         │                    │  ETD49    │                        │
+         │                    └───────────┘                        │
+         │                         │                               │
+         │                         │                               │
+         │                    (Ver Secundario                      │
+         │                     en Sección 5)                       │
+         │                         │                               │
+         │       ┌─────────────────┼─────────────────┐             │
+         │       │                 │                 │             │
+              ┌──┴───┐             │             ┌───┴──┐
+              │      │             │             │      │
+              │  Q2  │             │             │  Q4  │
+              │IRFZ44N             │             │IRFZ44N
+              │(Low-A)             │             │(Low-B)
+              │      │             │             │      │
+         ┌────┤D     │             │             │  D   ├────┐
+         │    │      │             │             │      │    │
+    [LO_A]   │G  S  │             │             │G  S  │   [LO_B]
+         │    └───┬──┘             │             └──┬───┘    │
+         │        └────────────────┼────────────────┘        │
+         │                         │                         │
+         │                         │                         │
+         └─────────────────────────┴─────────────────────────┘
+                                   │
+                                  GND
+
+
+ESPECIFICACIONES DE LOS MOSFETs:
+  Q1, Q2, Q3, Q4: IRFZ44N (55V, 49A) o IRF3205 (55V, 110A)
+  - Todos deben tener disipador de calor compartido
+  - Aplicar pasta térmica
+  - Usar aisladores térmicos si el disipador es metálico
+  - Resistencias gate: 10Ω en serie con cada gate
+
+CONEXIONES DE GATE (con resistencias):
+  HO_A  ──[10Ω]── Gate Q1
+  LO_A  ──[10Ω]── Gate Q2
+  HO_B  ──[10Ω]── Gate Q3
+  LO_B  ──[10Ω]── Gate Q4
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                      SECCIÓN 3: DRIVERS IR2110 (CON BOOTSTRAP)
+════════════════════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                            DRIVER #1 - IR2110 (Rama A)                                  │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                    +24V
+                                     │
+                                ┌────┴────┐
+                                │  D1     │  Diodo rápido UF4007
+                                │  ──►│   │
+                                └────┬────┘
+                                     │
+                   ┌─────────────────┴─────────────────┐
+                   │             C_BOOT_A              │  10µF / 50V
+                   │              ═══════              │
+                   └─────────────────┬─────────────────┘
+                                     │
+                            ┌────────┴────────┐
+                            │                 │
+                         [VB]  IR2110 #1    [HO] ──[10Ω]──► Gate Q1
+                            │                 │
+  Arduino Pin 9 ────────►[HIN]               │
+                            │                 │
+  Arduino Pin 5 ────────►[LIN]             [VS] ──────────► Source Q1 (VS_A)
+                            │                 │
+                  +12V ──►[VCC]             [LO] ──[10Ω]──► Gate Q2
+                            │                 │
+                        [COM/GND]────────────┘
+                            │
+                           GND
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                            DRIVER #2 - IR2110 (Rama B)                                  │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                    +24V
+                                     │
+                                ┌────┴────┐
+                                │  D2     │  Diodo rápido UF4007
+                                │  ──►│   │
+                                └────┬────┘
+                                     │
+                   ┌─────────────────┴─────────────────┐
+                   │             C_BOOT_B              │  10µF / 50V
+                   │              ═══════              │
+                   └─────────────────┬─────────────────┘
+                                     │
+                            ┌────────┴────────┐
+                            │                 │
+                         [VB]  IR2110 #2    [HO] ──[10Ω]──► Gate Q3
+                            │                 │
+  Arduino Pin 10 ───────►[HIN]               │
+                            │                 │
+  Arduino Pin 6 ────────►[LIN]             [VS] ──────────► Source Q3 (VS_B)
+                            │                 │
+                  +12V ──►[VCC]             [LO] ──[10Ω]──► Gate Q4
+                            │                 │
+                        [COM/GND]────────────┘
+                            │
+                           GND
+
+NOTAS IMPORTANTES:
+  - VCC puede ser +5V del Arduino o +12V para mejor rendimiento
+  - Los capacitores bootstrap (C_BOOT) deben estar MUY cerca de los pines VB y VS
+  - Diodos D1 y D2 deben ser ultrarrápidos (UF4007 o similar)
+  - HIN y LIN NUNCA deben estar en HIGH simultáneamente (tiempo muerto)
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                    SECCIÓN 4: ARDUINO Y CONEXIONES DE CONTROL
+════════════════════════════════════════════════════════════════════════════════════════════
+
+                        ┌─────────────────────────────┐
+                        │      ARDUINO NANO/UNO       │
+                        │         ATmega328P          │
+                        │                             │
+                        │                             │
+        ┌───────────────┤ D9  (PWM Timer1A)          │
+        │               │                             │
+        │   ┌───────────┤ D10 (PWM Timer1B)          │
+        │   │           │                             │
+        │   │   ┌───────┤ D5  (Control Low-A)        │
+        │   │   │       │                             │
+        │   │   │   ┌───┤ D6  (Control Low-B)        │
+        │   │   │   │   │                             │
+        │   │   │   │   │ D13 (LED indicador)  ├─────┤►├──┐
+        │   │   │   │   │                             │    │
+        │   │   │   │   │ D2  (Botón ON/OFF)   ├───┐ │   ═══ 220Ω
+        │   │   │   │   │                           │ │    │
+        │   │   │   │   │ A0  (Sensor corriente)├───┼─┼────┘
+        │   │   │   │   │                           │ │   GND
+        │   │   │   │   │ A1  (Sensor voltaje)  ├───┼─┤
+        │   │   │   │   │                           │ │
+        │   │   │   │   │ 5V  ────────────────────┐ │ │
+        │   │   │   │   │                         │ │ │
+        │   │   │   │   │ GND ────────────────┐   │ │ │
+        │   │   │   │   │                     │   │ │ │
+        └───┼───┼───┼───┼─────────────────────┼───┼─┼─┼───┐
+            │   │   │   └─────────────────────┼───┼─┼─┼───┘
+            │   │   │                         │   │ │ │
+            │   │   │                         │   │ │ │
+            │   │   │                   ┌─────┴───┴─┴─┴────┐
+            │   │   │                   │   PUSH BUTTON     │
+            │   │   │                   │   (NO - con R_PU) │
+            │   │   │                   └───────────────────┘
+            │   │   │
+            │   │   │   [Conectar a IR2110 como se mostró arriba]
+            │   │   │
+            ▼   ▼   ▼
+         [HIN_A] [HIN_B] [LIN_A/B]
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                   SECCIÓN 5: SENSORES DE VOLTAJE Y CORRIENTE
+════════════════════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                        SENSOR DE VOLTAJE (Divisor Resistivo)                            │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+              +24V entrada
+                 │
+                 │
+              ┌──┴──┐
+              │ R1  │  68kΩ (precisión 1%)
+              │     │
+              └──┬──┘
+                 │
+                 ├────────────────► Arduino Pin A1 (Analog Input)
+                 │
+              ┌──┴──┐
+              │ R2  │  10kΩ (precisión 1%)
+              │     │
+              └──┬──┘
+                 │
+              ┌──┴──┐
+              │ C1  │  100nF (filtro de ruido)
+              │ === │
+              └──┬──┘
+                 │
+                GND
+
+  Factor de división: (R1 + R2) / R2 = 7.8
+  Voltaje máximo medible: 5V × 7.8 = 39V
+  Para 24V: salida = 24 / 7.8 = 3.08V al ADC
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                    SENSOR DE CORRIENTE (ACS712 Hall Effect)                             │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+                             +24V entrada
+                                 │
+                                 │
+                   ┌─────────────┴─────────────┐
+                   │                           │
+                   │      ACS712-30A           │
+                   │                           │
+              ┌────┤ IP+                       │
+              │    │                           │
+         [Carga]   │                       OUT ├──┬────► Arduino Pin A0
+              │    │                           │  │
+              └────┤ IP-                       │  │
+                   │                           │ ═══ 100nF (filtro)
+                   │ VCC ◄─── +5V Arduino      │  │
+                   │                           │ GND
+                   │ GND ◄─── GND Arduino      │
+                   │                           │
+                   └───────────────────────────┘
+
+  ACS712-30A: 66mV/A, offset 2.5V @ 0A
+  ACS712-20A: 100mV/A, offset 2.5V @ 0A (alternativa)
+  
+  Cálculo:
+    Corriente (A) = (V_out - 2.5V) / Sensibilidad
+    Para 30A: I = (V_out - 2.5) / 0.066
+    Para 20A: I = (V_out - 2.5) / 0.100
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                 SECCIÓN 6: TRANSFORMADOR DE FERRITA Y FILTRO LC
+════════════════════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                     TRANSFORMADOR DE FERRITA (Alta Frecuencia)                          │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+    Desde H-Bridge (VS_A y VS_B):
+    
+         VS_A ──────────┐                          ┌──────── SECUNDARIO
+                        │                          │
+                     ┌──┴───┐     ┌────────┐   ┌──┴───┐
+                     │ ● ●  │     │ NÚCLEO │   │ ● ●  │
+         Primario    │ 12   │     │ FERRITA│   │ 84   │  Secundario
+         (12 vueltas)│ vuel │     │ ETD49  │   │vueltas  (84 vueltas)
+         Alambre     │ tas  │     │ N87/   │   │      │  Alambre
+         #14 AWG     │      │◄────┤ 3C90   ├──►│      │  #20 AWG
+                     │ ● ●  │     │        │   │ ● ●  │
+                     └──┬───┘     └────────┘   └──┬───┘
+                        │                          │
+         VS_B ──────────┘                          └──────── A filtro LC
+
+  ESPECIFICACIONES DEL TRANSFORMADOR:
+    • Relación de vueltas: 1:7 (12 vueltas primario, 84 secundario)
+    • Núcleo: ETD49 o EE55 (ferrita tipo N87, 3C90, 3F3)
+    • Frecuencia de trabajo: 20 kHz
+    • Entrehierro: 0.5 - 1.0 mm (para evitar saturación)
+    • Aislamiento: Cinta Kapton entre capas (para 160V pico)
+    • Bobinado primario: Alambre #14 AWG (o 2.5mm²)
+    • Bobinado secundario: Alambre #20 AWG (o 0.8mm²)
+    
+  CÁLCULO DE VOLTAJE:
+    V_primario RMS = 24V × 0.707 = ~17V RMS (señal SPWM)
+    V_secundario = 17V × 7 = ~119V RMS
+    V_secundario pico = 119V × 1.414 = ~168V pico
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                           FILTRO LC DE SALIDA (60Hz)                                    │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+    Desde secundario del transformador:
+    
+              ┌────────────────────────────────────┐
+              │                                    │
+              │  L1 = 10mH / 5A                   │
+              │  (Núcleo de polvo de hierro)      │
+              │                                    │
+    HOT ◄─────┴──────╋╋╋╋╋╋╋╋╋╋╋──────┬──────────┴────► 120V AC OUT (HOT)
+                      Inductor          │
+                         10mH            │
+                                         │
+                                      ┌──┴──┐
+                                      │ C2  │  Capacitor
+                                      │10µF │  Tipo X2
+                                      │250V │  (polipropileno)
+                                      │ AC  │
+                                      └──┬──┘
+                                         │
+    NEUTRAL ◄────────────────────────────┴───────────────► 120V AC OUT (NEUTRAL)
+         │                               │
+         │                               │
+         └───────────────┬───────────────┘
+                         │
+                       EARTH ◄──────────────────────────► GROUND/EARTH
+                      (Chasis)
+
+  ESPECIFICACIONES DEL FILTRO:
+    • Inductor L1: 10 mH, corriente nominal 5A (ajustar según carga)
+    • Capacitor C2: 10 µF / 250V AC (tipo X2 para supresión EMI)
+    • Frecuencia de corte: fc = 1/(2π√LC) = 1/(2π√(10mH×10µF)) ≈ 500 Hz
+    • Debe atenuar 20kHz pero permitir 60Hz
+    
+  PROTECCIÓN DE SALIDA:
+    • Fusible térmico 10A en serie con HOT
+    • MOV (varistor) 150V entre HOT y NEUTRAL
+    • Conexión a tierra del chasis metálico
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                         SECCIÓN 7: ALIMENTACIÓN DEL ARDUINO
+════════════════════════════════════════════════════════════════════════════════════════════
+
+                +24V entrada
+                    │
+                    │
+               ┌────┴─────┐
+               │  LM7812  │  Regulador 12V / 1A
+               │          │  (con disipador)
+            1──┤IN    OUT ├──3
+               │          │
+            2──┤   GND    │
+               └────┬─────┘
+                    │
+        ┌───────────┼───────────┐
+        │           │           │
+     ┌──┴──┐        │        ┌──┴──┐
+     │ C3  │        │        │ C4  │
+     │100nF│        │        │100nF│
+     │ === │        │        │ === │
+     └──┬──┘        │        └──┬──┘
+        │           │           │
+       GND      ┌───┴───┐      GND
+                │ +12V  │
+                └───┬───┘
+                    │
+                    ├─────────────► VCC IR2110 (ambos drivers)
+                    │
+               ┌────┴─────┐
+               │  LM7805  │  Regulador 5V / 1A
+               │          │  (con disipador)
+            1──┤IN    OUT ├──3
+               │          │
+            2──┤   GND    │
+               └────┬─────┘
+                    │
+        ┌───────────┼───────────┐
+        │           │           │
+     ┌──┴──┐        │        ┌──┴──┐
+     │ C5  │        │        │ C6  │
+     │100nF│        │        │ 10µF│
+     │ === │        │        │ === │
+     └──┬──┘        │        └──┬──┘
+        │           │           │
+       GND      ┌───┴───┐      GND
+                │  +5V  │
+                └───┬───┘
+                    │
+                    └─────────────► VIN Arduino (o USB para programación)
+
+  ALTERNATIVA: Usar módulos Buck DC-DC (más eficientes)
+    • Módulo XL4015 o LM2596: 24V → 12V (para IR2110)
+    • Módulo LM2596: 24V → 5V (para Arduino)
+    • Ventaja: Menor calor generado, mayor eficiencia
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                            SECCIÓN 8: TIERRAS Y MASAS
+════════════════════════════════════════════════════════════════════════════════════════════
+
+IMPORTANTE: Sistema de tierras correctamente diseñado
+
+  [GND_POWER]  ────── Tierra de potencia (24V, H-Bridge)
+       │              • Cable grueso (10 AWG mínimo)
+       │              • Punto estrella en batería negativa
+       │
+       ├────────────► Fuente negativa de MOSFETs (Q2, Q4)
+       ├────────────► Negativo capacitor de entrada
+       ├────────────► COM de IR2110
+       │
+       │
+  [GND_SIGNAL] ────── Tierra de señal (Arduino, sensores)
+       │              • Cable mediano (18-20 AWG)
+       │              • Conectar en UN SOLO PUNTO a GND_POWER
+       │
+       ├────────────► GND Arduino
+       ├────────────► GND sensores
+       └────────────► COM IR2110 (shared)
+       
+       
+  [EARTH] ────────── Tierra de seguridad (chasis)
+                     • Cable verde/amarillo
+                     • Conectar a chasis metálico
+                     • Conexión a tierra física
+                     • NO conectar directamente a GND_POWER
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                          SECCIÓN 9: PROTECCIONES ADICIONALES
+════════════════════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                          PROTECCIÓN CONTRA POLARIDAD INVERSA                            │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+              +24V Batería
+                   │
+                   │
+              ┌────┴────┐
+              │  D_REV  │  Diodo Schottky 40A/45V
+              │  ──►│   │  (o MOSFET de protección)
+              └────┬────┐  MBR4045
+                   │
+                   └─────► +24V al sistema
+
+  Si se conecta la batería al revés, el diodo bloquea la corriente.
+  Usar diodo Schottky para minimizar pérdida de voltaje (0.3-0.5V).
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                         PROTECCIÓN TÉRMICA (Temperatura)                                │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+                          [Disipador MOSFETs]
+                                  │
+                                  │ (térmicamente acoplado)
+                                  │
+                            ┌─────┴─────┐
+                            │   NTC     │  Termistor NTC 10kΩ
+                            │  10kΩ @   │  Montado en disipador
+                            │   25°C    │  con pasta térmica
+                            └─────┬─────┘
+                                  │
+                                  ├───────────► Arduino Pin A2
+                                  │
+                            ┌─────┴─────┐
+                            │    10kΩ   │  Resistencia fija
+                            │           │  (divisor de voltaje)
+                            └─────┬─────┘
+                                  │
+                                 GND
+
+  Si temperatura > 80°C → Apagar inversor automáticamente
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                      VARISTOR (MOV) - Protección Sobretensión                           │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+                      120V AC OUT (HOT)
+                            │
+                            │
+                      ┌─────┴─────┐
+                      │    MOV    │  Varistor Metal Oxide
+                      │   150V    │  (protege contra picos)
+                      │   20mm    │  Tipo: 14D151K
+                      └─────┬─────┘
+                            │
+                      120V AC OUT (NEUTRAL)
+
+  El MOV conduce solo cuando hay sobretensión, protegiendo la salida.
+
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                              NOTAS FINALES IMPORTANTES
+════════════════════════════════════════════════════════════════════════════════════════════
+
+1. CALIBRES DE CABLE RECOMENDADOS:
+   ├─ Entrada 24V (+/-):        10 AWG (6 mm²) mínimo
+   ├─ H-Bridge a transformador: 12 AWG (4 mm²) mínimo
+   ├─ Salida 120V:              14 AWG (2.5 mm²) según carga
+   ├─ Señales de control:       22-24 AWG (0.5 mm²)
+   └─ Tierra de seguridad:      14 AWG (2.5 mm²) verde/amarillo
+
+2. CAPACITORES CRÍTICOS:
+   ├─ C_entrada (4700µF/35V):   DEBE estar cerca de los MOSFETs
+   ├─ C_bootstrap (10µF/50V):   DEBE estar a menos de 5cm del IR2110
+   └─ C_filtro (10µF/250VAC):   Tipo X2, certificado para supresión EMI
+
+3. DISIPACIÓN DE CALOR:
+   ├─ Disipador MOSFETs:        Rth < 1°C/W con ventilador forzado
+   ├─ Reguladores de voltaje:   Disipadores individuales TO-220
+   └─ Transformador:            Ventilación natural, temperatura < 60°C
+
+4. PCB / PROTOBOARD:
+   ├─ Separar claramente: zona de potencia vs zona de control
+   ├─ Pistas de potencia:  Ancho mínimo 3mm (o reforzar con alambre)
+   ├─ Pistas de señal:     Ancho mínimo 0.5mm
+   └─ Plano de tierra:     Lo más amplio posible
+
+5. SEGURIDAD ELÉCTRICA:
+   ⚠️  Aislar completamente el secundario del transformador
+   ⚠️  Usar caja plástica o metálica conectada a tierra
+   ⚠️  Etiquetas de advertencia "120V AC - PELIGRO"
+   ⚠️  Fusibles en entrada y salida
+   ⚠️  Interruptor de corte de emergencia accesible
+
+6. PRUEBAS REQUERIDAS:
+   ├─ Continuidad y cortocircuitos (multímetro)
+   ├─ Verificación de señales PWM (osciloscopio)
+   ├─ Prueba de tiempo muerto (osciloscopio dual)
+   ├─ Medición de forma de onda de salida
+   └─ Prueba de temperatura bajo carga prolongada
+
+════════════════════════════════════════════════════════════════════════════════════════════
+FIN DEL ESQUEMA ELÉCTRICO
+Versión 1.0 - Inversor SPWM 24V → 120V AC
+════════════════════════════════════════════════════════════════════════════════════════════

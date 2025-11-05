@@ -1,0 +1,304 @@
+╔══════════════════════════════════════════════════════════════════════════════════════════╗
+║                    DIAGRAMA DE BLOQUES - SISTEMA COMPLETO                                ║
+║                  INVERSOR ONDA SINUSOIDAL PURA 24V → 120V AC                            ║
+╚══════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+                            ┌───────────────────────────────────┐
+                            │      BATERÍA / FUENTE 24V DC      │
+                            │         (22V - 29V rango)         │
+                            └──────────────┬────────────────────┘
+                                           │ 24V DC
+                                           │
+                    ┌──────────────────────┼──────────────────────┐
+                    │                      │                      │
+                    │                      ▼                      │
+                    │            ┌─────────────────┐              │
+                    │            │   FUSIBLE 40A   │              │
+                    │            │   + CAPACITOR   │              │
+                    │            │   FILTRADO 4700µF│             │
+                    │            └────────┬─────────┘             │
+                    │                     │                       │
+    ┌───────────────▼────────┐            │            ┌──────────▼──────────┐
+    │  REGULACIÓN 12V/5V     │            │            │   H-BRIDGE          │
+    │  ┌──────────────────┐  │            │            │   (4 MOSFETs)       │
+    │  │ 24V → 12V → 5V   │  │            │            │                     │
+    │  │  LM7812 / LM7805 │  │            │            │  Q1 ──┐   ┐── Q3   │
+    │  └──────────────────┘  │            │            │       │   │        │
+    └─┬────────────────────┬─┘            │            │  Q2 ──┴───┴── Q4   │
+      │ 5V           12V   │              │            └──────────┬──────────┘
+      │              │     │              │                       │
+      ▼              │     │              │                       │ SPWM 20kHz
+┌─────────────────┐  │     │              │                       │
+│  ARDUINO NANO   │  │     │              │                       ▼
+│  (ATmega328P)   │  │     │              │          ┌────────────────────────┐
+│                 │  │     │              │          │   TRANSFORMADOR        │
+│  ┌───────────┐  │  │     │              │          │   DE FERRITA           │
+│  │  Timer1   │  │  │     │              │          │   Alta Frecuencia      │
+│  │  20kHz    │  │  │     │              │          │                        │
+│  │  PWM Gen  │  │  │     │              │          │   Primario: 12 vueltas │
+│  └─────┬─────┘  │  │     │              │          │   1:7                  │
+│        │        │  │     │              │          │   Secundario: 84 vueltas│
+│  ┌─────▼─────┐  │  │     │              │          └────────┬───────────────┘
+│  │  Timer2   │  │  │     │              │                   │ 168Vpk
+│  │  60Hz     │  │  │     │              │                   │
+│  │  Seno Gen │  │  │     │              │                   ▼
+│  └─────┬─────┘  │  │     │              │          ┌────────────────────────┐
+│        │        │  │     │              │          │    FILTRO LC           │
+│  D9  D10       │  │     │              │          │    (Pasa-bajos)        │
+│   │   │   D5 D6│  │     │              │          │                        │
+└───┼───┼────┼──┼─┘  │     │              │          │  L: 10mH  C: 10µF     │
+    │   │    │  │    │     │              │          │  fc ≈ 500Hz            │
+    │   │    │  │    │     │              │          └────────┬───────────────┘
+    │   │    │  │    │     │              │                   │
+    │   │    │  └────┼─────┼──────────────┼───────────────────┤
+    │   │    │       │     │              │                   │
+    ▼   ▼    ▼       ▼     │              │                   ▼
+┌──────────────────────────┴┐             │          ┌────────────────────────┐
+│  DRIVERS IR2110 (x2)      │             │          │   120V AC @ 60Hz       │
+│  ┌──────────┐ ┌──────────┐│             │          │   ONDA SINUSOIDAL PURA │
+│  │ IR2110#1 │ │ IR2110#2 ││             │          │                        │
+│  │  Rama A  │ │  Rama B  ││             │          │   ┌─────────────┐      │
+│  └────┬─────┘ └─────┬────┘│             │          │   │ PROTECCIÓN  │      │
+│       │             │     │             │          │   │ MOV + Fusible│     │
+│   HO/LO_A      HO/LO_B    │             │          │   └─────────────┘      │
+└───────┼─────────────┼─────┘             │          │                        │
+        │             │                   │          │  HOT  ──────────┐      │
+        └──────┬──────┘                   │          │                 │      │
+               │                          │          │  NEUTRAL ───────┤      │
+               │ Gate signals             │          │                 │      │
+               └──────────────────────────┘          │  EARTH ─────────┘      │
+                                                     └────────────────────────┘
+                                                              │
+                                                              │
+┌─────────────────────────────────────────────────────────────▼──────────────┐
+│                         SENSORES Y MONITOREO                               │
+│  ┌──────────────────┐        ┌────────────────────┐                       │
+│  │ Sensor Voltaje   │        │ Sensor Corriente   │                       │
+│  │ (Divisor R)      │        │ (ACS712-30A)       │                       │
+│  │  Pin A1          │        │  Pin A0            │                       │
+│  └────────┬─────────┘        └─────────┬──────────┘                       │
+│           │                             │                                  │
+│           └─────────────┬───────────────┘                                  │
+│                         │                                                  │
+│                         ▼                                                  │
+│            ┌────────────────────────┐                                      │
+│            │   ARDUINO ADC          │                                      │
+│            │   Monitoreo continuo   │                                      │
+│            └────────────────────────┘                                      │
+│                         │                                                  │
+│                         ▼                                                  │
+│            ┌────────────────────────┐                                      │
+│            │  PROTECCIONES SOFTWARE │                                      │
+│            │  • Bajo voltaje < 22V  │                                      │
+│            │  • Sobrevoltaje > 29V  │                                      │
+│            │  • Sobrecorriente      │                                      │
+│            │  • LED indicador       │                                      │
+│            │  • Apagado automático  │                                      │
+│            └────────────────────────┘                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                         FLUJO DE SEÑALES Y POTENCIA
+════════════════════════════════════════════════════════════════════════════════════════════
+
+1. POTENCIA (Líneas gruesas ═══):
+   
+   BATERÍA 24V ═══► FUSIBLE ═══► H-BRIDGE ═══► TRANSFORMADOR ═══► FILTRO LC ═══► 120V AC
+
+
+2. CONTROL (Líneas finas ───):
+   
+   ARDUINO ───► PWM (9,10) ───► IR2110 ───► GATES (Q1-Q4) ───► H-BRIDGE
+
+
+3. REALIMENTACIÓN (Líneas punteadas ···):
+   
+   SENSORES (V, I) ···► ADC Arduino ···► Decisiones de protección ···► ON/OFF
+
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                         SINCRONIZACIÓN DE SEÑALES
+════════════════════════════════════════════════════════════════════════════════════════════
+
+TIEMPO →
+
+Timer2 @ 6kHz (Interrupción cada 166µs):
+├─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬──   (100 veces por ciclo de 60Hz)
+  │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ │
+  └─► Actualiza índice de tabla de seno (0-99)
+
+
+Timer1 @ 20kHz (PWM):
+├┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬─   (Cada 50µs)
+ │││││││││││││││││││││││││││││││││││││││││││││
+ └► Ancho de pulso variable según valor senoidal
+
+
+Onda Senoidal Resultante @ 60Hz (después del filtro):
+        ╱╲         ╱╲         ╱╲
+       ╱  ╲       ╱  ╲       ╱  ╲
+    __╱    ╲_____╱    ╲_____╱    ╲__
+              ╲_╱        ╲_╱        ╲_╱
+
+    ◄────── 16.67ms ──────►  (1 ciclo de 60Hz)
+
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                    ESTADOS DEL H-BRIDGE (Secuencia SPWM)
+════════════════════════════════════════════════════════════════════════════════════════════
+
+SEMICICLO POSITIVO (0° - 180°):
+─────────────────────────────────
+  Q1: PWM Variable (modulado según seno)
+  Q2: OFF
+  Q3: OFF
+  Q4: ON (conducción continua)
+  
+  Corriente: 24V → Q1 → Primario → Q4 → GND
+  
+     Q1 [PWM]──┐      ┌──Q3 [OFF]
+               │      │
+            ╔══╧══════╧══╗
+            ║ PRIMARIO TX ║
+            ╚══╤══════╤══╝
+               │      │
+     Q2 [OFF]──┘      └──Q4 [ON]
+
+
+SEMICICLO NEGATIVO (180° - 360°):
+──────────────────────────────────
+  Q1: OFF
+  Q2: ON (conducción continua)
+  Q3: PWM Variable (modulado según seno)
+  Q4: OFF
+  
+  Corriente: 24V → Q3 → Primario → Q2 → GND
+  
+     Q1 [OFF]──┐      ┌──Q3 [PWM]
+               │      │
+            ╔══╧══════╧══╗
+            ║ PRIMARIO TX ║
+            ╚══╤══════╤══╝
+               │      │
+     Q2 [ON]───┘      └──Q4 [OFF]
+
+
+TIEMPO MUERTO (Dead Time):
+──────────────────────────
+  Entre transiciones:
+  - Apagar Q1/Q4 primero
+  - Esperar 2µs (tiempo muerto)
+  - Encender Q2/Q3
+  
+  CRÍTICO: NUNCA Q1 y Q2 ON simultáneamente
+           NUNCA Q3 y Q4 ON simultáneamente
+           → Esto causaría CORTOCIRCUITO (shoot-through)
+
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                         DISTRIBUCIÓN FÍSICA RECOMENDADA
+════════════════════════════════════════════════════════════════════════════════════════════
+
+Vista superior del PCB/montaje:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  ┌──────────┐                                     ┌──────────────────────┐ │
+│  │ ENTRADA  │                                     │   SALIDA 120V AC     │ │
+│  │ 24V DC   │                                     │   (AISLADA)          │ │
+│  │  + / -   │                                     │   ┌────────────┐     │ │
+│  └────┬─────┘                                     │   │ FILTRO LC  │     │ │
+│       │                                           │   └────────────┘     │ │
+│  ┌────▼──────┐                                    │                      │ │
+│  │ FUSIBLE + │                                    │   MOV + Fusible      │ │
+│  │ CAPACITOR │                                    │                      │ │
+│  └────┬──────┘                                    │   [HOT] [NEUTRAL]    │ │
+│       │                                           └──────────────────────┘ │
+│       │          ┌──────────────────────────┐                              │
+│       │          │    ZONA DE POTENCIA      │         ┌─────────────────┐ │
+│       │          │                          │         │ TRANSFORMADOR   │ │
+│       │          │  ┌────┐  ┌────┐         │         │   FERRITA       │ │
+│       └──────────┼──┤ Q1 ├──┤ Q3 ├─────────┼─────────┤   ETD49         │ │
+│                  │  └────┘  └────┘  ◄────┐ │         │                 │ │
+│                  │     │       │     20kHz│ │         └─────────────────┘ │
+│                  │  ┌────┐  ┌────┐        │ │                             │
+│                  │  │ Q2 │  │ Q4 │        │ │                             │
+│                  │  └────┘  └────┘        │ │                             │
+│                  │   (con DISIPADOR)      │ │                             │
+│                  └───────────┬────────────┘ │                             │
+│                              │              │                             │
+│  ┌──────────────────────┐    │              │                             │
+│  │   ZONA DE CONTROL    │    │              │                             │
+│  │                      │    ▲              │                             │
+│  │  ┌────────────────┐  │    │ Señales     │                             │
+│  │  │ IR2110 #1/#2   │  │    │ Gate        │                             │
+│  │  │ (Drivers)      │──┼────┘             │                             │
+│  │  └────────┬───────┘  │                  │                             │
+│  │           │          │                  │                             │
+│  │  ┌────────▼───────┐  │                  │                             │
+│  │  │   ARDUINO      │  │                  │                             │
+│  │  │   NANO         │  │                  │                             │
+│  │  └────────────────┘  │                  │                             │
+│  │                      │                  │                             │
+│  │  ┌────────────────┐  │                  │                             │
+│  │  │ Reguladores    │  │                  │                             │
+│  │  │ 12V/5V         │  │                  │                             │
+│  │  └────────────────┘  │                  │                             │
+│  └──────────────────────┘                  │                             │
+│                                            │                             │
+│  ┌──────────────────────┐                  │                             │
+│  │  SENSORES            │                  │                             │
+│  │  • Divisor Voltaje   │                  │                             │
+│  │  • ACS712            │                  │                             │
+│  │  • Termistor NTC     │                  │                             │
+│  └──────────────────────┘                  │                             │
+│                                            │                             │
+│  [LED]  [BOTÓN ON/OFF]                     │                             │
+│                                            │                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+SEPARACIÓN CRÍTICA:
+  ≥ 5mm entre zona de potencia y control
+  ≥ 10mm de aislamiento en secundario del transformador (120V)
+
+
+════════════════════════════════════════════════════════════════════════════════════════════
+                              RESUMEN DE CONEXIONES
+════════════════════════════════════════════════════════════════════════════════════════════
+
+ARDUINO → IR2110 #1:
+  Pin D9  → HIN (High Input)
+  Pin D5  → LIN (Low Input)
+  
+ARDUINO → IR2110 #2:
+  Pin D10 → HIN (High Input)
+  Pin D6  → LIN (Low Input)
+
+IR2110 #1 → MOSFETs Rama A:
+  HO → Gate Q1 (a través de 10Ω)
+  LO → Gate Q2 (a través de 10Ω)
+  
+IR2110 #2 → MOSFETs Rama B:
+  HO → Gate Q3 (a través de 10Ω)
+  LO → Gate Q4 (a través de 10Ω)
+
+H-BRIDGE → Transformador:
+  Punto medio A (VS_A) → Pin 1 Primario
+  Punto medio B (VS_B) → Pin 2 Primario
+
+Transformador → Filtro LC:
+  Secundario → Inductor 10mH → Capacitor 10µF → Salida 120V AC
+
+SENSORES → ARDUINO:
+  Divisor Voltaje → Pin A1
+  ACS712 OUT → Pin A0
+  Termistor (opcional) → Pin A2
+  Botón ON/OFF → Pin D2
+  LED Indicador → Pin D13
+
+
+════════════════════════════════════════════════════════════════════════════════════════════
+FIN DEL DIAGRAMA DE BLOQUES
+════════════════════════════════════════════════════════════════════════════════════════════
