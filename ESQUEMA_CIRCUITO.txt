@@ -1,0 +1,324 @@
+================================================================================
+    ESQUEMA DETALLADO DEL CIRCUITO - INVERSOR 24V a 120V
+    Onda Sinusoidal Pura con Transformador de Ferrita
+================================================================================
+
+SECCIÓN 1: ENTRADA DE POTENCIA
+================================================================================
+
+  BATERÍA 24V
+      (+) ----[FUSIBLE 30A]----+----[C1: 2200µF/35V]----+
+                                |                         |
+                                |                         |
+                             [ACS712]                    GND
+                           Sensor I                      
+                                |                         
+                                +---------> NODE_POWER
+                                
+
+SECCIÓN 2: PUENTE H CON DRIVERS IR2110
+================================================================================
+
+                           NODE_POWER (+24V)
+                                 |
+                                 |
+                +----------------+----------------+
+                |                                 |
+                |                                 |
+         +------+------+                   +------+------+
+         |   IR2110 #1 |                   |   IR2110 #2 |
+         | (Driver A)  |                   | (Driver B)  |
+         +-------------+                   +-------------+
+         VCC(1)  12V                       VCC(1)  12V
+         HIN(2)  Pin9 Arduino              HIN(2)  Pin3 Arduino
+         LIN(3)  Pin10 Arduino             LIN(3)  Pin11 Arduino
+         COM(4)  GND                       COM(4)  GND
+         LO(5)   Gate Q2                   LO(5)   Gate Q4
+         VS(6)   Source Q1                 VS(6)   Source Q3
+         HO(7)   Gate Q1                   HO(7)   Gate Q3
+         VB(8)   Bootstrap                 VB(8)   Bootstrap
+                |                                 |
+                |                                 |
+         +------+------+                   +------+------+
+         |     Q1      |                   |     Q3      |
+         | IRF3205     |                   | IRF3205     |
+         | (HS-A)      |                   | (HS-B)      |
+         +-------------+                   +-------------+
+      Drain |  Gate  Source            Drain |  Gate  Source
+            |    |      |                    |    |      |
+      +24V -+    +--[R 10Ω]--HO         +24V-+    +--[R 10Ω]--HO
+                      |                             |
+            +---------+                   +---------+
+            |                             |
+            +-----> NODO_A                +-----> NODO_B
+            |                             |
+            +---------+                   +---------+
+                      |                             |
+         +------+------+                   +------+------+
+         |     Q2      |                   |     Q4      |
+         | IRF3205     |                   | IRF3205     |
+         | (LS-A)      |                   | (LS-B)      |
+         +-------------+                   +-------------+
+      Drain |  Gate  Source            Drain |  Gate  Source
+            |    |      |                    |    |      |
+      NODO_A-+   +--[R 10Ω]--LO       NODO_B-+    +--[R 10Ω]--LO
+                      |                             |
+            +---------+                   +---------+
+            |                             |
+           GND                           GND
+
+
+SECCIÓN 3: TRANSFORMADOR DE FERRITA
+================================================================================
+
+        NODO_A                          NODO_B
+           |                               |
+           |                               |
+           +------[PRIMARIO]---------------+
+           |                               |
+           |    TRANSFORMADOR              |
+           |    DE FERRITA                 |
+           |    Relación 1:7               |
+           |    50kHz                      |
+           |                               |
+           |                               |
+           +------[PRIMARIO]---------------+
+                     |
+                    GND
+                    
+                    
+                [SECUNDARIO]
+                     |
+                 170V peak
+                     |
+                     +----> A ETAPA DE RECTIFICACIÓN
+
+
+SECCIÓN 4: ETAPA DE RECTIFICACIÓN Y FILTRADO (SALIDA)
+================================================================================
+
+    SECUNDARIO DEL TRANSFORMADOR
+           |           |
+           |           |
+         [D1]        [D2]          Puente rectificador
+       UF4007      UF4007          de onda completa
+           |\        /|
+           | \      / |
+           |  \    /  |
+           |   \  /   |
+           |    \/    |
+           |    /\    |
+           |   /  \   |
+           |  /    \  |
+           | /      \ |
+           |/        \|
+         [D3]        [D4]
+       UF4007      UF4007
+           |           |
+           |           |
+           +-----+-----+
+                 |
+                 +----[L1: 1mH]----+----[C2: 2µF/400V]----+
+                                   |                       |
+                                   |                       |
+                               +-------+               +-------+
+                               |       |               |       |
+                            120VAC   120VAC          NEUTRO   GND
+                             VIVO    Salida
+                               |       |
+                               +-------+
+                                   |
+                          Divisor Voltaje
+                          (a Pin A0)
+
+
+SECCIÓN 5: CIRCUITO DE SENSADO Y PROTECCIÓN
+================================================================================
+
+A) SENSOR DE CORRIENTE (ACS712-20A):
+
+                    +24V
+                     |
+                [ACS712]
+                VCC  |  GND  OUT
+                 |   |   |    |
+                5V   |  GND   +---[C: 100nF]---+----> Pin A1 (Arduino)
+                     |                         |
+                  IP+  IP-                    GND
+                   |    |
+              Línea de carga principal
+
+
+B) DIVISOR DE VOLTAJE BATERÍA:
+
+                +24V Batería
+                     |
+                  [R1: 90kΩ 1/2W]
+                     |
+                     +----------> Pin A2 (Arduino)
+                     |
+                  [R2: 10kΩ 1/4W]
+                     |
+                    GND
+
+
+C) DIVISOR DE VOLTAJE SALIDA:
+
+                120VAC (después de rectificar)
+                     |
+                  [R1: 470kΩ 2W]  ← Usar resistencias de alta potencia
+                     |
+                     +---[C: 100nF]---+----> Pin A0 (Arduino)
+                     |                |
+                  [R2: 10kΩ 1/4W]    GND
+                     |
+                    GND
+
+
+SECCIÓN 6: ALIMENTACIÓN Y CONTROL ARDUINO
+================================================================================
+
+                +24V Batería
+                     |
+                  [7812]  ← Regulador 12V para IR2110
+                VIN |  GND
+                    |   |
+                   12V GND
+                    |
+                    +---[C: 100µF]---GND
+                    |
+                    +---> VCC IR2110 #1
+                    +---> VCC IR2110 #2
+                    
+                    
+                +24V Batería
+                     |
+                  [7805]  ← Regulador 5V para Arduino (opcional)
+                VIN |  GND
+                    |   |
+                    5V GND
+                    |
+                    +---[C: 100µF]---GND
+                    |
+                    +---> VIN Arduino (o usar USB)
+
+
+PINES DE CONTROL ARDUINO:
+                    
+                    ARDUINO NANO/UNO
+                  +------------------+
+                  |                  |
+          Pin D9  |  OC1A (PWM)      |----[R: 10Ω]----> HIN IR2110 #1
+          Pin D10 |  OC1B (PWM)      |----[R: 10Ω]----> LIN IR2110 #1
+          Pin D3  |  OC2B (PWM)      |----[R: 10Ω]----> HIN IR2110 #2
+          Pin D11 |  OC2A (PWM)      |----[R: 10Ω]----> LIN IR2110 #2
+                  |                  |
+          Pin D7  |  ENABLE          |-----> Enable IR2110 (ambos)
+          Pin D8  |  OVERLOAD        |<----- Detección externa
+          Pin D13 |  LED Status      |-----> LED + Resistencia
+                  |                  |
+          Pin A0  |  ADC0            |<----- Divisor Voltaje Salida
+          Pin A1  |  ADC1            |<----- ACS712 OUT
+          Pin A2  |  ADC2            |<----- Divisor Voltaje Batería
+                  |                  |
+                  |  GND             |-----> GND común
+                  |  5V              |-----> Referencias ADC
+                  +------------------+
+
+
+SECCIÓN 7: CIRCUITO BOOTSTRAP PARA IR2110
+================================================================================
+
+Para cada IR2110:
+
+                    +12V
+                     |
+                  [D_boot]
+                 UF4007
+                     |
+                     +---[C_boot: 10µF/25V]---+
+                     |                         |
+                     +----> VB (Pin 8)        VS (Pin 6)
+                                               |
+                                          Source MOSFET
+                                          High-Side
+
+
+SECCIÓN 8: CAPACITORES DE DESACOPLO
+================================================================================
+
+Colocar en TODOS los circuitos integrados:
+
+    Para IR2110:
+        VCC --[C: 100nF cerámico]-- GND  (muy cerca del IC)
+        
+    Para Arduino:
+        5V --[C: 100nF cerámico]-- GND   (cerca de cada pin ADC)
+        VIN --[C: 100µF electrolítico]-- GND
+
+
+SECCIÓN 9: PROTECCIONES ADICIONALES RECOMENDADAS
+================================================================================
+
+A) VARISTOR DE ENTRADA:
+                +24V ----[Varistor 33V]---- GND
+                (Protección contra picos)
+
+B) DIODOS DE RUEDA LIBRE:
+                En paralelo a cada MOSFET (drain-source)
+                [Diodo Schottky rápido]
+                
+C) SNUBBERS RC:
+                En paralelo a primario del transformador
+                [R: 47Ω] en serie con [C: 100nF/250V]
+
+D) FUSIBLE DE SALIDA:
+                120VAC ----[Fusible 10A]----> Carga
+
+
+SECCIÓN 10: LAYOUT Y CONSIDERACIONES PCB
+================================================================================
+
+IMPORTANTE para el diseño del PCB:
+
+1. PISTAS DE POTENCIA:
+   - Mínimo 2mm de ancho para corrientes >10A
+   - Usar plano de cobre para GND
+   - Separar GND de potencia y GND de señal
+
+2. COLOCACIÓN DE COMPONENTES:
+   - IR2110 muy cerca de los MOSFETs
+   - Capacitores de desacoplo lo más cerca posible de los ICs
+   - Mantener pistas de gate cortas (<5cm)
+
+3. SEPARACIÓN:
+   - Mantener 5mm entre pistas de alta tensión
+   - Aislar completamente 120VAC del resto
+   - Usar optoacopladores si necesita comunicación
+
+4. DISIPACIÓN TÉRMICA:
+   - MOSFETs en buen contacto con disipador
+   - Ventilación adecuada
+   - IR2110 también pueden necesitar disipador
+
+5. BLINDAJE:
+   - Caja metálica con conexión a tierra
+   - Filtros EMI en entrada y salida
+   - Cables apantallados para señales sensibles
+
+
+NOTAS FINALES:
+================================================================================
+
+⚠️ NUNCA trabajar en el circuito mientras esté energizado
+⚠️ Usar aislamiento adecuado para 120VAC
+⚠️ Probar primero con cargas pequeñas
+⚠️ Verificar con osciloscopio antes de conectar carga real
+⚠️ Implementar todas las protecciones de hardware
+
+Este esquema es una guía. Debe adaptarse según componentes específicos
+disponibles y requerimientos de potencia.
+
+================================================================================
+Fin del documento
+================================================================================
