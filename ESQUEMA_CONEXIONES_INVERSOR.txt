@@ -1,0 +1,151 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║          ESQUEMA DE CONEXIONES - INVERSOR 24V DC A 120V AC               ║
+║                    Onda Sinusoidal Pura - Alta Frecuencia                ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 1. ETAPA DE POTENCIA - PUENTE H COMPLETO (Full Bridge)                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+                            +24V DC
+                              │
+                    ┌─────────┴─────────┐
+                    │                   │
+                 ┌──┴──┐             ┌──┴──┐
+            ┌────│ Q1  │────┐   ┌────│ Q3  │────┐
+            │    │MOSFET│    │   │    │MOSFET│    │
+   Pin 9 ───┤    └─────┘     │   │    └─────┘     ├─── Pin 3
+   (PWM)    │                │   │                 │   (PWM)
+            │        A       │   │       B         │
+            │    ┌─────┐     │   │     ┌─────┐    │
+            └────│ Q2  │────┐│   │┌────│ Q4  │────┘
+   Pin 10 ───────│MOSFET│    ││   ││    │MOSFET│───────── Pin 11
+   (PWM)         └─────┘    ││   ││    └─────┘          (PWM)
+                    │       ││   ││       │
+                    └───────┼┴───┴┼───────┘
+                            │  │  │
+                            │  │  │
+                      GND ──┘  │  └── GND
+                               │
+                          ┌────┴────┐
+                          │ Ferrite │ TRANSFORMADOR
+                          │  Core   │ DE FERRITA
+                          │ H.F.    │ Alta Frecuencia
+                          │         │ Ratio: 1:5 aprox.
+                          └────┬────┘
+                               │
+                          120V AC OUT
+                          (Después de
+                           filtrado)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 2. COMPONENTES RECOMENDADOS                                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+MOSFETs (Q1-Q4):
+  • Modelo: IRFZ44N o IRF3205
+  • VDS: >60V
+  • ID: >30A
+  • RDS(on): <0.03Ω
+  • Gate Driver: IR2110 o IR2184 (necesario para lado alto)
+
+Transformador de Ferrita:
+  • Núcleo: ETD39 o EE55 (ferrita N87 o similar)
+  • Frecuencia: 20-50 kHz
+  • Potencia: 300-500W
+  • Primario: 20-30 vueltas (cable Litz o múltiple)
+  • Secundario: 100-150 vueltas
+  • Entrehierro: 0.5-1mm
+
+Gate Drivers:
+  • IR2110 (x2) - Half-bridge driver
+  • Alimentación aislada: 12-15V para el lado alto
+  • Bootstrap capacitor: 10µF/25V
+  • Bootstrap diode: UF4007
+
+Sensores:
+  • Corriente: ACS712-20A (Hall effect)
+  • Voltaje: Divisor resistivo (R1=100kΩ, R2=10kΩ)
+  • Protección: Filtro RC en entradas analógicas
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 3. CONEXIONES ARDUINO                                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+ARDUINO UNO/NANO:                  CONEXIÓN:
+─────────────────                  ─────────
+Pin 9  (PWM Timer1) ────────────→ IR2110 #1 (IN_HI) → Q1 Gate
+Pin 10 (PWM Timer1) ────────────→ IR2110 #1 (IN_LO) → Q2 Gate
+Pin 3  (PWM Timer2) ────────────→ IR2110 #2 (IN_HI) → Q3 Gate
+Pin 11 (PWM Timer2) ────────────→ IR2110 #2 (IN_LO) → Q4 Gate
+
+Pin A0 (Analog) ─────────────────→ ACS712 Output
+Pin A1 (Analog) ─────────────────→ Divisor de voltaje
+Pin 2  (Digital/INT) ────────────→ Pulsador Start/Stop
+Pin 13 (LED) ────────────────────→ LED indicador + resistencia 220Ω
+
+5V ──────────────────────────────→ ACS712 VCC, Lógica
+GND ─────────────────────────────→ Común de señal
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 4. ETAPA DE FILTRADO DE SALIDA                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Transformador → Rectificador → Filtro LC → 120V AC Sinusoidal
+   (HF AC)         (Bridge)      Pasabajo      (60Hz)
+
+Filtro LC recomendado:
+  • L: 2-5 mH (Inductancia de alta corriente)
+  • C: 4.7 µF (Film capacitor, 250V AC)
+  • Frecuencia de corte: ~1-2 kHz
+  • Atenúa armónicos de alta frecuencia
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 5. ALIMENTACIÓN Y PROTECCIONES                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Batería/Fuente 24V:
+  ├─→ Fusible 25A ──→ Inversor (Entrada de potencia)
+  ├─→ Buck Converter ──→ 12V (Gate drivers)
+  └─→ Buck Converter ──→ 5V (Arduino y lógica)
+
+Protecciones recomendadas:
+  ✓ Fusible en entrada de potencia (25-30A)
+  ✓ TVS diode en entrada (36V, bidireccional)
+  ✓ Snubber RC en MOSFETs (100Ω + 100nF)
+  ✓ Dead-time en control (mínimo 1µs)
+  ✓ Sobrecorriente por software
+  ✓ Sobrevoltaje/bajo voltaje por software
+  ✓ Sensor de temperatura (opcional: LM35, NTC)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 6. NOTAS IMPORTANTES DE SEGURIDAD                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+⚠ ADVERTENCIAS:
+  1. El diseño maneja voltajes peligrosos (120V AC)
+  2. Usar PCB con pistas gruesas (>2mm para corrientes altas)
+  3. Separación mínima 5mm entre trazas de alta tensión
+  4. Disipadores térmicos en todos los MOSFETs
+  5. Gabinete aislado con conexión a tierra
+  6. Nunca operar sin las protecciones implementadas
+  7. Probar primero con carga resistiva (bombilla)
+  8. Dead-time crítico: evitar cortocircuito shoot-through
+
+⚡ PUESTA EN MARCHA:
+  1. Verificar todas las conexiones sin alimentación
+  2. Comprobar aislamiento del transformador (>1MΩ)
+  3. Primera prueba: sin carga, observar forma de onda
+  4. Segunda prueba: carga pequeña (lámpara 20W)
+  5. Monitorear temperatura de MOSFETs y transformador
+  6. Ajustar duty cycle si es necesario
+
+
+═══════════════════════════════════════════════════════════════════════════
+                             FIN DEL ESQUEMA
+═══════════════════════════════════════════════════════════════════════════

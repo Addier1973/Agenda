@@ -1,0 +1,288 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║      LISTA DE MATERIALES (BOM) - INVERSOR 24V DC A 120V AC              ║
+║                 Bill of Materials - Pure Sine Wave Inverter              ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 1. COMPONENTES SEMICONDUCTORES                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      P/N              ESPECIFICACIONES
+────────────────────────────────────────────────────────────────────────────
+  4    MOSFET N-Channel                IRFZ44N          60V, 50A, RDS=17.5mΩ
+                                        (o IRF3205)      (55V, 110A, RDS=8mΩ)
+  
+  2    Half-Bridge Driver IC           IR2110           600V, Bootstrap
+  
+  4    Fast Recovery Diode             UF4007           1000V, 1A (Bootstrap)
+  
+  2    Schottky Diode                  1N5822           40V, 3A (Protección)
+  
+  1    TVS Diode Bidireccional         P6KE36CA         36V, 600W (Clamp)
+  
+  1    Microcontrolador                Arduino Nano     ATmega328P, 16MHz
+                                        (o Uno)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 2. SENSORES Y MONITOREO                                                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      P/N              ESPECIFICACIONES
+────────────────────────────────────────────────────────────────────────────
+  1    Sensor de Corriente Hall        ACS712-20A       20A, 5V, ±1%
+  
+  1    Sensor de Temperatura           LM35DZ           0-100°C (Opcional)
+                                        (o NTC 10k)
+  
+  2    Resistor Precisión (Divisor)    100kΩ            1%, 0.25W
+  1    Resistor Precisión (Divisor)    10kΩ             1%, 0.25W
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 3. CAPACITORES                                                           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      VALOR            ESPECIFICACIONES
+────────────────────────────────────────────────────────────────────────────
+  4    Electrolítico (Entrada)         1000µF           35V, Low ESR
+  
+  2    Electrolítico (Bootstrap)       10µF             25V, Low ESR
+  
+  4    Cerámico (Bypass IC)            100nF            50V, X7R
+  
+  2    Cerámico (Gate Driver)          1µF              25V, X7R
+  
+  4    Snubber (Protección MOSFET)     100nF            250V, Film
+  
+  1    Filtro Salida LC                4.7µF            250V AC, Polypropylene
+  
+  2    Cerámico (Arduino)              100nF            50V, Bypass
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 4. RESISTORES                                                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      VALOR            POTENCIA
+────────────────────────────────────────────────────────────────────────────
+  4    Gate Pull-down                  10kΩ             0.25W, 5%
+  
+  4    Snubber                         100Ω             1W, 5%
+  
+  2    Bootstrap                       10Ω              0.25W, 5%
+  
+  1    LED Indicador                   220Ω             0.25W, 5%
+  
+  1    Pull-up Botón                   10kΩ             0.25W, 5%
+  
+  2    Divisor Voltaje                 Ver sección 2
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 5. INDUCTOR Y TRANSFORMADOR                                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      ESPECIFICACIONES
+────────────────────────────────────────────────────────────────────────────
+  1    Transformador de Ferrita        Núcleo: ETD39 o EE55
+                                        Material: N87, N27, 3C90
+                                        Primario: 20-25 vueltas (AWG18-20 Litz)
+                                        Secundario: 140-150 vueltas (AWG22 Litz)
+                                        Entrehierro: 0.5-1mm
+                                        Potencia: 500W @ 31kHz
+                                        
+                                        ALTERNATIVA COMERCIAL:
+                                        - WE-HCF 750317264 (Würth)
+                                        - Similar con ratio 1:6
+  
+  1    Inductor de Filtro LC           2-5mH, ≥8A corriente RMS
+                                        Núcleo: Polvo de hierro (Iron Powder)
+                                        o Ferrita con entrehierro
+                                        DCR < 0.1Ω
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 6. CONECTORES Y CABLES                                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      ESPECIFICACIONES
+────────────────────────────────────────────────────────────────────────────
+  2    Terminal Tornillo Entrada       2 posiciones, 30A, 5.08mm pitch
+  
+  1    Enchufe Salida 120V AC          NEMA 5-15R (USA) o equivalente
+  
+  1    Fusible + Portafusible          25-30A, Blade tipo ATO
+  
+  1    Interruptor Principal           SPST, 30A mínimo
+  
+  1    Pulsador Momentáneo             NO (Normalmente Abierto)
+  
+  1    LED Indicador                   5mm, Rojo o Verde
+  
+  -    Cable entrada potencia          AWG12 (4mm²), rojo/negro
+  
+  -    Cable señales control           AWG22-24 (0.5mm²), varios colores
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 7. DISIPACIÓN TÉRMICA                                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      ESPECIFICACIONES
+────────────────────────────────────────────────────────────────────────────
+  4    Disipador para TO-220           Rth: 3-5 °C/W por MOSFET
+                                        o 1 disipador común con Rth<1°C/W
+  
+  -    Pasta térmica                   > 3 W/m·K (ej: Arctic MX-4)
+  
+  1    Ventilador 12V                  80mm, 1-2W, >30 CFM (Opcional)
+  
+  4    Kit aislante TO-220             Mica o silicona + tornillo aislado
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 8. PCB Y GABINETE                                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      ESPECIFICACIONES
+────────────────────────────────────────────────────────────────────────────
+  1    PCB Doble Cara                  FR-4, 1.6mm espesor
+                                        Cobre: 2oz (70µm) mínimo
+                                        Dimensiones: ~150x100mm
+                                        Soldermask + Silkscreen
+                                        
+  1    Gabinete Plástico/Metal         Con ventilación
+                                        Dimensiones sugeridas: 200x150x80mm
+                                        Clasificación: IP20 mínimo
+  
+  -    Tornillos, separadores          M3, varios tamaños
+  
+  1    Terminal tierra                 Para gabinete metálico
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 9. FUENTES DE ALIMENTACIÓN AUXILIARES                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CANT.  DESCRIPCIÓN                      ESPECIFICACIONES
+────────────────────────────────────────────────────────────────────────────
+  1    Buck Converter 24V→12V          LM2596 o similar
+                                        Salida: 12V, 1A (para Gate Drivers)
+  
+  1    Buck Converter 24V→5V           LM2596 o 7805 con disipador
+                                        Salida: 5V, 500mA (para Arduino)
+  
+       ALTERNATIVA: Usar módulos comerciales DC-DC Buck
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 10. HERRAMIENTAS NECESARIAS (No incluidas en BOM)                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+  □  Soldador de estaño (60-80W)
+  □  Estaño 60/40 con flux
+  □  Multímetro digital
+  □  Osciloscopio (mínimo 50MHz recomendado)
+  □  Fuente de alimentación 24V DC (o batería)
+  □  Carga resistiva de prueba (bombilla 40-100W)
+  □  Destornilladores, pinzas, cortacables
+  □  Pistola de calor (para termo-retráctil)
+
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                           RESUMEN DE COSTOS                               ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+CATEGORÍA                              COSTO ESTIMADO (USD)
+─────────────────────────────────────────────────────────────────────────────
+Semiconductores (MOSFETs, ICs, etc)        $15 - $25
+Transformador de Ferrita                   $20 - $40 (o DIY)
+Capacitores e Inductores                   $10 - $20
+Sensores (ACS712, etc)                     $5 - $10
+Arduino Nano                               $3 - $15 (original/clon)
+PCB (fabricación)                          $5 - $20
+Disipadores y ventilación                  $10 - $20
+Conectores, cables, gabinete               $15 - $30
+Fuentes auxiliares DC-DC                   $5 - $10
+Misceláneos (resistores, etc)              $5 - $10
+─────────────────────────────────────────────────────────────────────────────
+TOTAL ESTIMADO:                            $93 - $200
+
+* Los precios varían según proveedor, cantidad y región.
+* Transformador DIY puede reducir costos significativamente.
+* PCB casera (método térmico o CNC) puede reducir costos.
+
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                      PROVEEDORES RECOMENDADOS                             ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+COMPONENTES ELECTRÓNICOS:
+  • Mouser Electronics      (www.mouser.com)
+  • Digi-Key                (www.digikey.com)
+  • Arrow Electronics       (www.arrow.com)
+  • AliExpress              (para alternativas económicas)
+  • eBay                    (módulos y transformadores)
+
+NÚCLEOS DE FERRITA:
+  • Magnetics Inc.          (www.mag-inc.com)
+  • TDK Electronics         (www.tdk-electronics.com)
+  • Ferroxcube              (www.ferroxcube.com)
+
+FABRICACIÓN PCB:
+  • JLCPCB                  (www.jlcpcb.com)
+  • PCBWay                  (www.pcbway.com)
+  • OSH Park                (www.oshpark.com)
+
+ARDUINO Y MÓDULOS:
+  • Arduino Store           (store.arduino.cc)
+  • SparkFun                (www.sparkfun.com)
+  • Adafruit                (www.adafruit.com)
+
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                        NOTAS IMPORTANTES                                  ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+1. MOSFETS: Preferir IRF3205 sobre IRFZ44N por menor RDS(on) y mayor eficiencia
+
+2. TRANSFORMADOR: Es el componente más crítico y costoso. Considerar:
+   - Opción 1: Comprar transformador comercial (más caro, más confiable)
+   - Opción 2: Bobinar manualmente (económico, requiere experiencia)
+   - Opción 3: Adaptar transformador de fuente ATX (modificación necesaria)
+
+3. PCB: Trazas de corriente alta (>5A) deben ser:
+   - Ancho mínimo: 3-5mm (cobre 2oz)
+   - O usar múltiples vías + puentes de estaño
+   - Polígonos de cobre para distribución de potencia
+
+4. CALIBRACIÓN: Los sensores requieren calibración después del montaje:
+   - Sensor de voltaje: comparar con multímetro
+   - Sensor de corriente: usar carga conocida de referencia
+
+5. ALTERNATIVAS:
+   - En lugar de Arduino Nano, se puede usar: Uno, Mega, o incluso STM32
+   - IR2110 puede ser reemplazado por IR2184, IRS2186S
+   - ACS712 puede ser reemplazado por: INA219, INA226 (mayor precisión)
+
+6. SEGURIDAD:
+   - NO omitir fusibles ni protecciones
+   - Usar cable de calibre adecuado (AWG12 mínimo para 24V/20A)
+   - Gabinete con conexión a tierra física
+   - Separación mínima 5mm entre trazas de alta tensión
+
+7. PRUEBAS:
+   - Comenzar SIEMPRE con carga resistiva (bombilla)
+   - NO conectar cargas inductivas (motores) sin protección adicional
+   - NO conectar cargas sensibles hasta verificar calidad de onda
+
+
+═══════════════════════════════════════════════════════════════════════════
+                         FIN DE LISTA DE MATERIALES
+═══════════════════════════════════════════════════════════════════════════
+
+Para más información, consultar:
+  - README_INVERSOR.md (Documentación completa)
+  - ESQUEMA_CONEXIONES_INVERSOR.txt (Diagramas de conexión)
+  - inversor_sinusoidal_24v_120v.ino (Código fuente)
