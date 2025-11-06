@@ -1,0 +1,691 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                  GUÍA DE CONEXIONES PASO A PASO                           ║
+║           Cada cable, cada pin, cada componente explicado                 ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    SECCIÓN 1: ENTRADA DE ALIMENTACIÓN
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 1.1 - Conectar Fusible de Entrada
+───────────────────────────────────────
+Terminal batería (+) ──┬── Un lado del FUSIBLE 30A
+                       │
+                       └── Cable ROJO grueso (AWG 10)
+
+Otro lado del FUSIBLE ──── Llamaremos a este punto "+24V BUS"
+
+
+PASO 1.2 - Conectar Varistor de Protección (MOV)
+─────────────────────────────────────────────────
+MOV Terminal 1 ──── Conectar a "+24V BUS"
+MOV Terminal 2 ──── Conectar a "GND BUS"
+
+(El MOV protege contra sobretensiones)
+
+
+PASO 1.3 - Conectar Capacitores de Filtro
+──────────────────────────────────────────
+Capacitor C1 (2200µF/50V):
+   Terminal (+) positivo ──── Conectar a "+24V BUS"
+   Terminal (−) negativo ──── Conectar a "GND BUS"
+
+Capacitor C2 (2200µF/50V):
+   Terminal (+) positivo ──── Conectar a "+24V BUS"
+   Terminal (−) negativo ──── Conectar a "GND BUS"
+
+IMPORTANTE: Los capacitores están en PARALELO
+
+
+PASO 1.4 - Conectar Terminal Negativo de Batería
+─────────────────────────────────────────────────
+Terminal batería (−) ──── Cable NEGRO grueso (AWG 10) ──── "GND BUS"
+
+
+RESUMEN VISUAL SECCIÓN 1:
+─────────────────────────
+    Bat(+)───[FUSIBLE]───┬─── +24V BUS (punto de distribución)
+                         │
+                      [MOV]
+                         │
+    Bat(−)───────────────┴─── GND BUS (punto de distribución)
+                         │
+                   [C1][C2] ambos conectados entre +24V y GND
+
+
+═══════════════════════════════════════════════════════════════════════════
+                SECCIÓN 2: ALIMENTACIÓN DE DRIVERS (15V)
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 2.1 - Preparar Regulador de Voltaje LM7815
+────────────────────────────────────────────────
+El LM7815 tiene 3 pines (mirando de frente con el disipador atrás):
+
+   Pin 1 (Izquierda)  = INPUT  (24V entra aquí)
+   Pin 2 (Centro)     = GND    (tierra común)
+   Pin 3 (Derecha)    = OUTPUT (15V sale aquí)
+
+
+PASO 2.2 - Conectar LM7815
+───────────────────────────
+LM7815 Pin 1 (INPUT)  ──── Conectar a "+24V BUS"
+LM7815 Pin 2 (GND)    ──── Conectar a "GND BUS"
+LM7815 Pin 3 (OUTPUT) ──── Este es nuestro "+15V" (para drivers)
+
+
+PASO 2.3 - Capacitores de Filtro del Regulador
+───────────────────────────────────────────────
+Capacitor 100nF cerámico:
+   Un terminal ──── Conectar a LM7815 Pin 1 (INPUT)
+   Otro terminal ─── Conectar a GND
+
+Capacitor 10µF electrolítico:
+   Terminal (+) ──── Conectar a LM7815 Pin 3 (OUTPUT, +15V)
+   Terminal (−) ──── Conectar a GND
+
+
+RESUMEN VISUAL SECCIÓN 2:
+─────────────────────────
+                 LM7815
+    +24V ─[100nF]─┤IN  OUT├─[10µF]─ +15V (para drivers IR2110)
+                  │   GND │
+    GND ──────────┴───────┴──────── GND
+
+
+═══════════════════════════════════════════════════════════════════════════
+            SECCIÓN 3: CONEXIÓN DRIVER IR2110 - BRAZO A
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 3.1 - Identificar Pines del IR2110 (Vista Superior)
+─────────────────────────────────────────────────────────
+
+    ┌─────────────┐
+    │  IR2110     │
+    │   (TOP)     │
+  1 │●  VCC   VB  │ 8
+  2 │   HIN   HO  │ 7
+  3 │   LIN   VS  │ 6
+  4 │   COM   LO  │ 5
+    └─────────────┘
+
+Pin 1 = VCC  (Alimentación +15V)
+Pin 2 = HIN  (Entrada High-side desde Arduino)
+Pin 3 = LIN  (Entrada Low-side desde Arduino)
+Pin 4 = COM  (GND común)
+Pin 5 = LO   (Salida Low-side al gate Q2)
+Pin 6 = VS   (Referencia flotante, conectar a Source de Q1)
+Pin 7 = HO   (Salida High-side al gate Q1)
+Pin 8 = VB   (Bootstrap, alimentación flotante)
+
+
+PASO 3.2 - Alimentación del Driver A
+─────────────────────────────────────
+IR2110-A Pin 1 (VCC) ──── Conectar a "+15V"
+IR2110-A Pin 4 (COM) ──── Conectar a "GND"
+IR2110-A Pin 8 (VB)  ──── (Ver paso 3.4 para bootstrap)
+IR2110-A Pin 6 (VS)  ──── (Ver paso 3.5)
+
+
+PASO 3.3 - Entradas de Control desde Arduino
+─────────────────────────────────────────────
+Arduino Pin D9  ──── Cable ──── IR2110-A Pin 2 (HIN)
+Arduino Pin D10 ──── Cable ──── IR2110-A Pin 3 (LIN)
+
+
+PASO 3.4 - Circuito Bootstrap del Driver A
+───────────────────────────────────────────
+Diodo UF4007:
+   Ánodo (−)   ──── Conectar a "+15V"
+   Cátodo (|>) ──── Conectar a IR2110-A Pin 8 (VB)
+
+Capacitor 10µF:
+   Terminal (+) ──── Conectar a IR2110-A Pin 8 (VB)
+   Terminal (−) ──── Conectar a IR2110-A Pin 6 (VS)
+
+
+PASO 3.5 - Conexión VS (Referencia Flotante)
+─────────────────────────────────────────────
+IR2110-A Pin 6 (VS) ──── Se conectará al SOURCE de Q1 (ver sección 4)
+
+
+PASO 3.6 - Salidas del Driver A a los Gates
+────────────────────────────────────────────
+IR2110-A Pin 7 (HO) ──── Resistor 10Ω ──── Gate de Q1 (MOSFET High-side)
+IR2110-A Pin 5 (LO) ──── Resistor 10Ω ──── Gate de Q2 (MOSFET Low-side)
+
+
+PASO 3.7 - Capacitores de Bypass
+─────────────────────────────────
+Capacitor 100nF cerámico #1:
+   Un terminal ──── Conectar entre Pin 1 (VCC) y Pin 4 (COM)
+   
+Capacitor 100nF cerámico #2:
+   Un terminal ──── Conectar entre Pin 7 (HO) y Pin 6 (VS)
+
+Capacitor 100nF cerámico #3:
+   Un terminal ──── Conectar entre Pin 5 (LO) y Pin 4 (COM)
+
+
+═══════════════════════════════════════════════════════════════════════════
+            SECCIÓN 4: CONEXIÓN MOSFETs - BRAZO A
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 4.1 - Identificar Pines del MOSFET IRF3205 (Vista Frontal)
+────────────────────────────────────────────────────────────────
+
+        ┌─────┐
+        │     │ ← Disipador metálico atrás
+        │IRF  │
+        │3205 │
+        └──┬──┘
+     G  D  S    ← Tres pines
+     │  │  │
+     1  2  3
+
+Pin 1 (Izquierda)  = GATE   (G)
+Pin 2 (Centro)     = DRAIN  (D)
+Pin 3 (Derecha)    = SOURCE (S)
+
+El disipador metálico está conectado internamente al DRAIN
+
+
+PASO 4.2 - Conectar Q1 (High-side Brazo A)
+───────────────────────────────────────────
+
+Q1 Pin 1 (GATE):
+   ──── Ya conectado desde IR2110-A Pin 7 vía resistor 10Ω
+
+Q1 Pin 2 (DRAIN):
+   ──── Conectar a "+24V BUS"
+
+Q1 Pin 3 (SOURCE):
+   ──── Este será el "NODO A" (conexión al transformador)
+   ──── También conectar a IR2110-A Pin 6 (VS)
+
+
+PASO 4.3 - Conectar Q2 (Low-side Brazo A)
+──────────────────────────────────────────
+
+Q2 Pin 1 (GATE):
+   ──── Ya conectado desde IR2110-A Pin 5 vía resistor 10Ω
+
+Q2 Pin 2 (DRAIN):
+   ──── Conectar al "NODO A" (mismo punto que Q1 SOURCE)
+
+Q2 Pin 3 (SOURCE):
+   ──── Conectar a "GND BUS"
+
+
+PASO 4.4 - Diodos de Protección (Opcional pero recomendado)
+────────────────────────────────────────────────────────────
+
+Diodo UF5408 para Q1:
+   Cátodo (|>) ──── Conectar a Q1 DRAIN (+24V)
+   Ánodo (−)   ──── Conectar a Q1 SOURCE (NODO A)
+
+Diodo UF5408 para Q2:
+   Cátodo (|>) ──── Conectar a Q2 DRAIN (NODO A)
+   Ánodo (−)   ──── Conectar a Q2 SOURCE (GND)
+
+
+RESUMEN VISUAL BRAZO A:
+───────────────────────
+
+         +24V
+           │
+           ├──── Q1 DRAIN
+           │     Q1 SOURCE ──┬── NODO A ──┐
+           │                 │            │
+           │                 └── VS (Driver A)
+           │                              │
+           └──── Q2 DRAIN ◄────────────────┘
+                 Q2 SOURCE ──── GND
+
+
+═══════════════════════════════════════════════════════════════════════════
+            SECCIÓN 5: DRIVER IR2110 Y MOSFETs - BRAZO B
+═══════════════════════════════════════════════════════════════════════════
+
+IMPORTANTE: El Brazo B es IDÉNTICO al Brazo A, solo cambian:
+- Las señales de control desde Arduino
+- El punto de conexión (NODO B en lugar de NODO A)
+
+
+PASO 5.1 - Alimentación del Driver B
+─────────────────────────────────────
+IR2110-B Pin 1 (VCC) ──── Conectar a "+15V"
+IR2110-B Pin 4 (COM) ──── Conectar a "GND"
+
+
+PASO 5.2 - Entradas de Control desde Arduino
+─────────────────────────────────────────────
+Arduino Pin D3  ──── Cable ──── IR2110-B Pin 2 (HIN)
+Arduino Pin D11 ──── Cable ──── IR2110-B Pin 3 (LIN)
+
+
+PASO 5.3 - Circuito Bootstrap del Driver B
+───────────────────────────────────────────
+Diodo UF4007:
+   Ánodo (−)   ──── Conectar a "+15V"
+   Cátodo (|>) ──── Conectar a IR2110-B Pin 8 (VB)
+
+Capacitor 10µF:
+   Terminal (+) ──── Conectar a IR2110-B Pin 8 (VB)
+   Terminal (−) ──── Conectar a IR2110-B Pin 6 (VS)
+
+
+PASO 5.4 - Salidas del Driver B a los Gates
+────────────────────────────────────────────
+IR2110-B Pin 7 (HO) ──── Resistor 10Ω ──── Gate de Q3 (MOSFET High-side)
+IR2110-B Pin 5 (LO) ──── Resistor 10Ω ──── Gate de Q4 (MOSFET Low-side)
+
+
+PASO 5.5 - Conectar Q3 (High-side Brazo B)
+───────────────────────────────────────────
+
+Q3 Pin 1 (GATE):
+   ──── Ya conectado desde IR2110-B Pin 7 vía resistor 10Ω
+
+Q3 Pin 2 (DRAIN):
+   ──── Conectar a "+24V BUS"
+
+Q3 Pin 3 (SOURCE):
+   ──── Este será el "NODO B" (conexión al transformador)
+   ──── También conectar a IR2110-B Pin 6 (VS)
+
+
+PASO 5.6 - Conectar Q4 (Low-side Brazo B)
+──────────────────────────────────────────
+
+Q4 Pin 1 (GATE):
+   ──── Ya conectado desde IR2110-B Pin 5 vía resistor 10Ω
+
+Q4 Pin 2 (DRAIN):
+   ──── Conectar al "NODO B" (mismo punto que Q3 SOURCE)
+
+Q4 Pin 3 (SOURCE):
+   ──── Conectar a "GND BUS"
+
+
+RESUMEN VISUAL BRAZO B:
+───────────────────────
+
+         +24V
+           │
+           ├──── Q3 DRAIN
+           │     Q3 SOURCE ──┬── NODO B ──┐
+           │                 │            │
+           │                 └── VS (Driver B)
+           │                              │
+           └──── Q4 DRAIN ◄────────────────┘
+                 Q4 SOURCE ──── GND
+
+
+═══════════════════════════════════════════════════════════════════════════
+            SECCIÓN 6: TRANSFORMADOR DE FERRITA
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 6.1 - Identificar Terminales del Transformador
+────────────────────────────────────────────────────
+
+Tu transformador tendrá 4 cables:
+   - 2 cables del PRIMARIO (donde entra 24V alta frecuencia)
+   - 2 cables del SECUNDARIO (donde sale 120V)
+
+
+PASO 6.2 - Conectar Primario del Transformador
+───────────────────────────────────────────────
+
+Transformador Primario Terminal 1 ──── Conectar a "NODO A"
+                                       (Source de Q1 / Drain de Q2)
+
+Transformador Primario Terminal 2 ──── Conectar a "NODO B"
+                                       (Source de Q3 / Drain de Q4)
+
+IMPORTANTE: Si el voltaje de salida es muy bajo o muy alto, 
+           invertir estos cables.
+
+
+PASO 6.3 - Identificar Secundario
+──────────────────────────────────
+El secundario tiene 2 cables que entregan 120V AC.
+No tiene polaridad fija (es AC), pero uno será "VIVO" y otro "NEUTRO"
+
+
+═══════════════════════════════════════════════════════════════════════════
+            SECCIÓN 7: FILTRO LC DE SALIDA
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 7.1 - Conectar Inductor
+─────────────────────────────
+
+Transformador Secundario Terminal 1 ──── Un lado del Inductor (2mH)
+
+
+PASO 7.2 - Conectar Capacitores de Filtro
+──────────────────────────────────────────
+
+Otro lado del Inductor ──┬── Terminal 1 de Capacitor 2.2µF (VIVO AC)
+                         │
+                         ├── Terminal 1 de Capacitor 100nF
+                         │
+                         └── Este es el "VIVO 120V AC"
+
+
+Transformador Secundario Terminal 2 ──┬── Terminal 2 de Capacitor 2.2µF
+                                       │
+                                       ├── Terminal 2 de Capacitor 100nF
+                                       │
+                                       └── Este es el "NEUTRO/GND AC"
+
+
+PASO 7.3 - Conectar Varistor de Salida (MOV)
+─────────────────────────────────────────────
+
+MOV 180V Terminal 1 ──── Conectar a "VIVO 120V AC"
+MOV 180V Terminal 2 ──── Conectar a "NEUTRO AC"
+
+
+PASO 7.4 - Conectar Fusible de Salida
+──────────────────────────────────────
+
+"VIVO 120V AC" ──── Un lado del Fusible 5A
+
+Otro lado del Fusible ──── Salida al enchufe (Terminal VIVO)
+
+
+RESUMEN VISUAL FILTRO:
+──────────────────────
+
+Transf.     ┌─[Inductor 2mH]─┬─[C 2.2µF]─┐
+Sec. T1 ────┘                 │           │
+                              ├─[C 100nF]─┤     [MOV]
+Transf.                       │           │       │
+Sec. T2 ──────────────────────┴───────────┴───────┴── NEUTRO
+                              │
+                           [FUSIBLE]
+                              │
+                        SALIDA VIVO 120V AC
+
+
+═══════════════════════════════════════════════════════════════════════════
+            SECCIÓN 8: ALIMENTACIÓN ARDUINO (5V)
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 8.1 - Preparar Regulador LM7805
+─────────────────────────────────────
+
+El LM7805 tiene 3 pines (igual que el LM7815):
+
+   Pin 1 (Izquierda)  = INPUT  (15V entra aquí)
+   Pin 2 (Centro)     = GND    
+   Pin 3 (Derecha)    = OUTPUT (5V sale aquí)
+
+
+PASO 8.2 - Conectar LM7805
+───────────────────────────
+
+LM7805 Pin 1 (INPUT)  ──── Conectar a "+15V" (salida del LM7815)
+LM7805 Pin 2 (GND)    ──── Conectar a "GND"
+LM7805 Pin 3 (OUTPUT) ──── Este es "+5V" para Arduino
+
+
+PASO 8.3 - Capacitores del LM7805
+──────────────────────────────────
+
+Capacitor 100nF:
+   Un terminal ──── LM7805 Pin 1 (INPUT)
+   Otro terminal ─── GND
+
+Capacitor 10µF:
+   Terminal (+) ──── LM7805 Pin 3 (OUTPUT, +5V)
+   Terminal (−) ──── GND
+
+
+PASO 8.4 - Alimentar Arduino
+─────────────────────────────
+
+Arduino Pin VIN o 5V ──── Conectar a "+5V" (salida LM7805)
+Arduino Pin GND      ──── Conectar a "GND"
+
+O puedes alimentar por USB durante programación/pruebas
+
+
+═══════════════════════════════════════════════════════════════════════════
+            SECCIÓN 9: CONEXIONES ARDUINO (CONTROL)
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 9.1 - Salidas PWM (Ya conectadas en secciones 3 y 5)
+──────────────────────────────────────────────────────────
+
+Arduino Pin D9  ──── IR2110-A Pin 2 (HIN) - Control Q1
+Arduino Pin D10 ──── IR2110-A Pin 3 (LIN) - Control Q2
+Arduino Pin D3  ──── IR2110-B Pin 2 (HIN) - Control Q3
+Arduino Pin D11 ──── IR2110-B Pin 3 (LIN) - Control Q4
+
+
+PASO 9.2 - LED de Estado
+─────────────────────────
+
+Arduino Pin D13 ──── Resistor 220Ω ──── Ánodo LED (pata larga +)
+                                        Cátodo LED (pata corta −) ──── GND
+
+
+PASO 9.3 - Botón Enable
+────────────────────────
+
+Arduino Pin D7 ──── Un terminal del botón pulsador
+Otro terminal del botón ──── GND
+
+(Arduino tiene pull-up interno, no requiere resistor externo)
+
+
+PASO 9.4 - Buzzer (Opcional)
+─────────────────────────────
+
+Arduino Pin D8 ──── Terminal (+) del Buzzer 5V
+Terminal (−) del Buzzer ──── GND
+
+
+═══════════════════════════════════════════════════════════════════════════
+            SECCIÓN 10: SENSORES (OPCIONAL)
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 10.1 - Sensor de Voltaje (Divisor Resistivo)
+──────────────────────────────────────────────────
+
+Resistor 1MΩ:
+   Un terminal ──── Conectar a "+24V BUS"
+   Otro terminal ─── Punto medio (llamémoslo "VM")
+
+Resistor 100kΩ:
+   Un terminal ──── Conectar a "VM"
+   Otro terminal ─── Conectar a GND
+
+Arduino Pin A0 ──── Conectar a "VM" (punto medio del divisor)
+
+CÁLCULO: VM = 24V × (100k/(1M+100k)) = 2.18V (seguro para Arduino)
+
+
+PASO 10.2 - Sensor de Corriente ACS712
+───────────────────────────────────────
+
+ACS712 tiene 5 pines:
+
+Pin VCC ──── Conectar a +5V
+Pin GND ──── Conectar a GND
+Pin OUT ──── Conectar a Arduino Pin A1
+
+Pin IP+ ──── Cable de entrada positivo de batería (en serie)
+Pin IP− ──── Continúa hacia "+24V BUS"
+
+NOTA: El sensor se coloca EN SERIE con la alimentación principal
+
+
+PASO 10.3 - Sensor de Temperatura NTC
+──────────────────────────────────────
+
+Resistor 10kΩ:
+   Un terminal ──── Conectar a +5V
+   Otro terminal ─── Punto medio "TM"
+
+NTC 10kΩ:
+   Un terminal ──── Conectar a "TM"
+   Otro terminal ─── Conectar a GND
+
+Arduino Pin A2 ──── Conectar a "TM"
+
+
+PASO 10.4 - Display LCD I2C
+────────────────────────────
+
+LCD tiene 4 pines:
+
+Pin VCC ──── Conectar a +5V
+Pin GND ──── Conectar a GND
+Pin SDA ──── Conectar a Arduino Pin A4
+Pin SCL ──── Conectar a Arduino Pin A5
+
+
+═══════════════════════════════════════════════════════════════════════════
+            TABLA COMPLETA DE CONEXIONES
+═══════════════════════════════════════════════════════════════════════════
+
+DESDE              | HACIA                 | CABLE/COMPONENTE
+───────────────────┼───────────────────────┼─────────────────────────
+Batería (+)        | Fusible 30A           | Cable rojo AWG10
+Fusible 30A        | +24V BUS              | Cable rojo AWG10
+Batería (−)        | GND BUS               | Cable negro AWG10
++24V BUS           | MOV (terminal 1)      | Cable corto
+MOV (terminal 2)   | GND BUS               | Cable corto
++24V BUS           | C1 (+), C2 (+)        | Cables cortos
+GND BUS            | C1 (−), C2 (−)        | Cables cortos
++24V BUS           | LM7815 Pin 1          | Cable rojo AWG18
+GND BUS            | LM7815 Pin 2          | Cable negro AWG18
+LM7815 Pin 3       | +15V (Drivers)        | Cable rojo AWG18
++15V               | IR2110-A Pin 1 (VCC)  | Cable amarillo
++15V               | IR2110-B Pin 1 (VCC)  | Cable amarillo
++15V               | Diodo UF4007 (ánodo)  | Para bootstrap A
++15V               | Diodo UF4007 (ánodo)  | Para bootstrap B
+Arduino D9         | IR2110-A Pin 2 (HIN)  | Cable señal AWG22
+Arduino D10        | IR2110-A Pin 3 (LIN)  | Cable señal AWG22
+Arduino D3         | IR2110-B Pin 2 (HIN)  | Cable señal AWG22
+Arduino D11        | IR2110-B Pin 3 (LIN)  | Cable señal AWG22
+IR2110-A Pin 7 (HO)| Resistor 10Ω → Q1 Gate| Cable corto
+IR2110-A Pin 5 (LO)| Resistor 10Ω → Q2 Gate| Cable corto
+IR2110-B Pin 7 (HO)| Resistor 10Ω → Q3 Gate| Cable corto
+IR2110-B Pin 5 (LO)| Resistor 10Ω → Q4 Gate| Cable corto
++24V BUS           | Q1 Drain              | Cable rojo AWG12
++24V BUS           | Q3 Drain              | Cable rojo AWG12
+Q1 Source          | NODO A                | Cable grueso AWG12
+Q1 Source          | IR2110-A Pin 6 (VS)   | Cable corto
+Q2 Drain           | NODO A                | Cable grueso AWG12
+Q2 Source          | GND BUS               | Cable negro AWG12
+Q3 Source          | NODO B                | Cable grueso AWG12
+Q3 Source          | IR2110-B Pin 6 (VS)   | Cable corto
+Q4 Drain           | NODO B                | Cable grueso AWG12
+Q4 Source          | GND BUS               | Cable negro AWG12
+NODO A             | Transformador Prim. T1| Cable grueso AWG12
+NODO B             | Transformador Prim. T2| Cable grueso AWG12
+Transf. Sec. T1    | Inductor 2mH (lado 1) | Cable AWG14
+Inductor (lado 2)  | Cap 2.2µF (term. 1)   | Cable AWG14
+Inductor (lado 2)  | Cap 100nF (term. 1)   | Cable AWG14
+Inductor (lado 2)  | VIVO 120V AC          | Cable marrón AWG14
+Transf. Sec. T2    | Cap 2.2µF (term. 2)   | Cable blanco AWG14
+Transf. Sec. T2    | Cap 100nF (term. 2)   | Cable blanco AWG14
+Transf. Sec. T2    | NEUTRO AC             | Cable blanco AWG14
+VIVO 120V AC       | MOV 180V (term. 1)    | Cable corto
+NEUTRO AC          | MOV 180V (term. 2)    | Cable corto
+VIVO 120V AC       | Fusible 5A            | Cable marrón AWG14
+Fusible 5A (salida)| Enchufe VIVO          | Cable marrón AWG14
+NEUTRO AC          | Enchufe NEUTRO        | Cable blanco AWG14
++15V               | LM7805 Pin 1          | Cable rojo
+LM7805 Pin 3       | Arduino VIN/5V        | Cable rojo
+GND                | Arduino GND           | Cable negro
+Arduino D13        | Resistor 220Ω → LED   | Cable
+Arduino D7         | Botón → GND           | Cable
+Arduino A0         | Divisor voltaje (VM)  | Cable verde
+Arduino A1         | ACS712 OUT            | Cable verde
+Arduino A2         | Divisor temp (TM)     | Cable verde
+Arduino A4         | LCD SDA               | Cable azul
+Arduino A5         | LCD SCL               | Cable azul
+
+
+═══════════════════════════════════════════════════════════════════════════
+            ORDEN RECOMENDADO DE MONTAJE
+═══════════════════════════════════════════════════════════════════════════
+
+ETAPA 1: Alimentación Base
+───────────────────────────
+1. Montar fusible de entrada
+2. Conectar MOV de entrada
+3. Conectar capacitores C1, C2
+4. Establecer puntos +24V BUS y GND BUS
+
+ETAPA 2: Reguladores
+────────────────────
+5. Montar LM7815 con disipador
+6. Conectar capacitores del LM7815
+7. Montar LM7805 con disipador
+8. Conectar capacitores del LM7805
+
+ETAPA 3: Drivers (sin MOSFETs aún)
+───────────────────────────────────
+9. Montar IR2110-A en PCB/protoboard
+10. Conectar alimentación (+15V, GND)
+11. Montar circuito bootstrap (diodo + cap 10µF)
+12. Conectar capacitores bypass (100nF)
+13. Repetir para IR2110-B
+
+ETAPA 4: Arduino
+────────────────
+14. Alimentar Arduino desde +5V
+15. Conectar señales de control D9, D10, D3, D11
+16. Conectar LED de estado y botón
+
+ETAPA 5: MOSFETs
+────────────────
+17. Montar Q1 con disipador y pasta térmica
+18. Conectar resistor 10Ω entre driver y gate
+19. Conectar Q1 Drain a +24V
+20. Conectar Q1 Source a NODO A y VS del driver
+21. Repetir para Q2 (conectar Source a GND)
+22. Repetir todo para Q3 y Q4 (Brazo B)
+
+ETAPA 6: Transformador y Filtro
+────────────────────────────────
+23. Conectar NODO A al primario transformador T1
+24. Conectar NODO B al primario transformador T2
+25. Conectar inductor al secundario
+26. Conectar capacitores de filtro
+27. Conectar MOV de salida
+28. Conectar fusible de salida
+
+ETAPA 7: Sensores (opcional)
+─────────────────────────────
+29. Montar divisor de voltaje y conectar a A0
+30. Instalar ACS712 y conectar a A1
+31. Montar sensor temperatura y conectar a A2
+32. Conectar LCD I2C a A4, A5
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    VERIFICACIONES CRÍTICAS
+═══════════════════════════════════════════════════════════════════════════
+
+ANTES de conectar la batería:
+
+✓ Polaridad de TODOS los capacitores electrolíticos correcta
+✓ Dirección de TODOS los diodos correcta
+✓ Pin 1, 2, 3 de reguladores en posición correcta
+✓ Gates de MOSFETs conectados a través de resistores 10Ω
+✓ MOSFETs tienen disipadores con pasta térmica
+✓ NO hay cortocircuito entre +24V y GND (medir con multímetro)
+✓ Fusibles instalados
+✓ Arduino programado con el código
+✓ NO hay carga conectada en la salida
+
+═══════════════════════════════════════════════════════════════════════════
+                    FIN DE LA GUÍA PASO A PASO
+═══════════════════════════════════════════════════════════════════════════

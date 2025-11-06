@@ -1,0 +1,521 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║           ESQUEMA ELECTRÓNICO TRADICIONAL                                 ║
+║        Con símbolos estándar de electrónica                               ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+SIMBOLOGÍA UTILIZADA:
+═════════════════════
+
+─────  Cable/Conexión
+─┬─    Conexión/Nodo
+─┴─    Unión a tierra/referencia
+═══    Cable de potencia (grueso)
+─|>─   Diodo (ánodo a cátodo)
+─[R]─  Resistor
+─||─   Capacitor no polarizado
+─|├─   Capacitor polarizado (+│−)
+─⊗─    Fusible
+─⊕⊖─   Batería (+ −)
+
+      ┌─┐
+  ────┤ ├────  MOSFET N-channel
+  G   └─┘   S  (Gate, Drain, Source)
+       D
+
+     ┌───┐
+─────┤IC ├─────  Circuito integrado
+     └───┘
+
+   ═══════  Bobina/Inductor
+   ═══════
+
+    ┌┴┐    Varistor/MOV
+    │ │
+    └┬┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    DIAGRAMA 1: ALIMENTACIÓN GENERAL
+═══════════════════════════════════════════════════════════════════════════
+
+                    ENTRADA 24V DC
+                         
+    ⊕ Batería 24V ─────────⊗──────────┬───────────────┬──── +24V
+      ⊖                 Fusible        │               │
+      │                  30A          ┌┴┐ MOV         |├ C1
+      │                               │ │ 36V         |├ 2200µF
+      │                               └┬┘             │  50V
+      │                                │              │
+      └────────────────────────────────┴──────────────┴──── GND
+                                       │              │
+                                       │             |├ C2
+                                       │             |├ 2200µF
+                                       │             │  50V
+                                       └──────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+              DIAGRAMA 2: REGULADORES DE VOLTAJE
+═══════════════════════════════════════════════════════════════════════════
+
+
+    REGULADOR 15V (Para Drivers IR2110)
+    ────────────────────────────────────
+
+                       LM7815
+              ┌───┐               ┌───┐
+    +24V ─||──┤IN │               │OUT├──|├──┬── +15V (IR2110)
+         100nF│   ├───┬───────────┤   │ 10µF│
+    GND ──────┤GND│   │           │GND├──────┴── GND
+              └───┘  ─┴─          └───┘
+                     GND
+
+
+    REGULADOR 5V (Para Arduino)
+    ───────────────────────────
+
+                       LM7805
+              ┌───┐               ┌───┐
+    +15V ─||──┤IN │               │OUT├──|├──┬── +5V (Arduino)
+         100nF│   ├───┬───────────┤   │ 10µF│
+    GND ──────┤GND│   │           │GND├──────┴── GND
+              └───┘  ─┴─          └───┘
+                     GND
+
+
+═══════════════════════════════════════════════════════════════════════════
+         DIAGRAMA 3: DRIVER IR2110 + MOSFET (HALF-BRIDGE)
+═══════════════════════════════════════════════════════════════════════════
+
+Este circuito se REPITE 2 veces (Brazo A y Brazo B)
+
+
+    CIRCUITO BOOTSTRAP Y DRIVER
+    ───────────────────────────
+
+                           Diodo Bootstrap
+                               UF4007
+    +15V ─────────────────────|>────┬────────┐
+                                    │        │
+                              ┌─────┴─────┐  │
+                              │ 10µF      │  │
+                              │ Bootstrap │  │
+                              └─────┬─────┘  │
+                                    │        │
+         ┌──────────────────────────┴────────┴────────┐
+         │                IR2110 DRIVER               │
+         │                                            │
+         │  VCC   VB    VS    HO    LO    COM   VDD  │
+         └───┬────┬─────┬─────┬─────┬─────┬─────┬────┘
+             │    │     │     │     │     │     │
+    +15V ────┤    │     │     │     │    ─┴─   ─┴─ +15V
+            ─┴─   │     │     │     │    GND   GND
+            GND   │     │     │     │
+          ┌───────┘     │     │     │
+    +15V ─┤             │     │     │
+          ├─||──────────┘     │     └────[10Ω]───┐
+          │ 100nF             │                   │
+         ─┴─                  │                   │
+         GND               [10Ω]                  │
+                              │                   │
+                              │                   │
+    Arduino PWM_HIGH ─────────┤ HIN           ┌───┴────┐
+                              │               │        │
+    Arduino PWM_LOW ──────────┤ LIN           │   Ver  │
+                              │               │ Conexión
+                                              │ MOSFETs│
+                                              │  Abajo │
+                                              └────────┘
+
+
+    CONEXIÓN DE MOSFETs (HALF-BRIDGE)
+    ──────────────────────────────────
+
+                             +24V
+                              │
+                              ═══ Pista potencia
+                              │
+                         ┌────┴────┐  ← MOSFET High-side (Q1 o Q3)
+                     G ──┤         │
+        (HO) ───[10Ω]────┤  IRF    │D
+                         │  3205   │
+                         │         │S
+                         └────┬────┘
+                              │
+                              ├─────────► NODO A (o NODO B)
+                              │           (al Transformador)
+                              │
+                              ├──────────► VS (al Driver, Pin 6)
+                              │
+                         ┌────┴────┐  ← MOSFET Low-side (Q2 o Q4)
+                     G ──┤         │
+        (LO) ───[10Ω]────┤  IRF    │D
+                         │  3205   │
+                         │         │S
+                         └────┬────┘
+                              │
+                              ═══ Pista potencia
+                              │
+                             GND
+
+
+    DIODOS DE PROTECCIÓN (Opcionales)
+    ──────────────────────────────────
+
+    En paralelo con cada MOSFET:
+
+         D ───────|>────── S   (UF5408, cátodo a Drain)
+               (UF5408)
+
+
+═══════════════════════════════════════════════════════════════════════════
+            DIAGRAMA 4: PUENTE H COMPLETO (4 MOSFETs)
+═══════════════════════════════════════════════════════════════════════════
+
+
+                        CONFIGURACIÓN COMPLETA
+                        ──────────────────────
+
+
+                              +24V
+                                │
+                ┌───────────────┼───────────────┐
+                │               │               │
+                │          ┌────┴────┐          │
+                │      G ──┤   Q1    │D         │
+    Driver A ───┼──[10Ω]───┤ IRF3205 │          │
+    (HO)        │          │         │S         │
+                │          └────┬────┘          │
+                │               │               │
+                │            (NODO A)        (NODO B)
+                │               │               │
+                │          ┌────┴────┐          │
+                │      G ──┤   Q2    │D         │
+    Driver A ───┼──[10Ω]───┤ IRF3205 │          │
+    (LO)        │          │         │S         │
+                │          └────┬────┘          │
+                │               │               │
+                │          ┌────┴────┐          │
+                │      G ──┤   Q3    │D         │
+    Driver B ───┼──[10Ω]───┤ IRF3205 │          │
+    (HO)        │          │         │S         │
+                │          └────┬────┘          │
+                │               │               │
+                │               │               │
+                │          ┌────┴────┐          │
+                │      G ──┤   Q4    │D         │
+    Driver B ───┼──[10Ω]───┤ IRF3205 │          │
+    (LO)        │          │         │S         │
+                │          └────┬────┘          │
+                │               │               │
+                └───────────────┴───────────────┘
+                                │
+                               GND
+
+
+       NODO A ════════════╗
+                          ║  TRANSFORMADOR
+       NODO B ════════════╣  DE FERRITA
+                          ║  Primario: 9 espiras
+                          ║  Secundario: 50 espiras
+                          ║  Núcleo: ETD49
+                          ╚════════════► AL FILTRO LC
+
+
+═══════════════════════════════════════════════════════════════════════════
+            DIAGRAMA 5: TRANSFORMADOR Y FILTRO LC
+═══════════════════════════════════════════════════════════════════════════
+
+
+    PRIMARIO (Alta frecuencia 31.25kHz, 24V)
+    ────────────────────────────────────────
+
+    NODO A ═════════╗
+                    ║ ┌─────────────┐
+                    ╠═╡             │
+                    ║ │  NÚCLEO     │  9 espiras
+                    ║ │  FERRITA    │  AWG18 Litz
+                    ╠═╡  ETD49      │
+                    ║ └─────────────┘
+    NODO B ═════════╝
+
+
+    SECUNDARIO (120V AC, 60Hz)
+    ──────────────────────────
+
+                    ┌─────────────┐
+                    │             ╞═╗
+                    │  NÚCLEO     │ ║  50 espiras
+                    │  FERRITA    │ ║  AWG24
+                    │  ETD49      ╞═╣
+                    └─────────────┘ ║
+                                    ╚═══► Terminal 1
+                                    ║
+                                    ╚═══► Terminal 2
+
+
+    FILTRO LC DE SALIDA
+    ───────────────────
+
+    Terminal 1 ═════════════════════════════╗
+    (Secundario)                            ║
+                                            ║
+                      ═════════             ║  Inductor
+                      ═════════  L1         ║  toroidal
+                        2mH                 ║  2mH, 10A
+                      ═════════             ║
+                      ═════════             ║
+                                            ║
+                         ├──────────────────╣
+                         │                  ║
+                        |├ C1              ─┴─
+                        |├ 2.2µF           GND
+                        │  250V
+                         │
+                        ─┴─
+                        GND              ┌─────┐
+                         │               │ MOV │  Varistor
+    Terminal 2 ──────────┴───────────────┤180V │  protección
+    (Secundario)                         └──┬──┘
+                                            │
+                                           GND
+
+
+    SALIDA FINAL
+    ────────────
+
+                         ┌─────────────────────► VIVO 120V AC
+                         │
+                         │
+    Después del     ┌────┴────┐
+    filtro LC  ─────┤ Fusible │
+                    │   5A    │
+                    └────┬────┘
+                         │
+                         └─────────────────────► Al enchufe
+
+
+    Terminal 2 ────────────────────────────────► NEUTRO AC
+    (Referencia)
+
+
+═══════════════════════════════════════════════════════════════════════════
+            DIAGRAMA 6: CONEXIONES ARDUINO
+═══════════════════════════════════════════════════════════════════════════
+
+
+                    MICROCONTROLADOR
+                    ────────────────
+
+         ┌─────────────────────────────────┐
+         │      ARDUINO NANO / UNO         │
+         │        ATmega328P               │
+         │                                 │
+    +5V ─┤ VIN                         D13 ├─[220Ω]─┬──(LED)─┬─ GND
+         │                                 │        │        │
+    GND ─┤ GND                         D12 ├────────┼────────┘
+         │                                 │        │
+         │                             D11 ├────────┼───────► Driver B (LIN)
+         │                                 │        │
+         │                             D10 ├────────┼───────► Driver A (LIN)
+         │                                 │        │
+  [BTN]──┤ D7 (Enable)                  D9 ├────────┼───────► Driver A (HIN)
+    │    │                                 │        │
+   GND   │                              D8 ├─[BZ]───┘ Buzzer
+         │                                 │
+         │                              D3 ├────────────────► Driver B (HIN)
+         │                                 │
+         │    ┌─────────────┐              │
+         │    │ LCD 16×2    │              │
+   +5V ──┼────┤ VCC         │          A5  ├◄───────────────► SCL (LCD)
+   GND ──┼────┤ GND         │              │
+         │    │ I2C 0x27    │          A4  ├◄───────────────► SDA (LCD)
+         │    └─────────────┘              │
+         │                                 │
+         │    [Sensores Opcionales]        │
+         │                                 │
+ [Vsen]──┤ A0 (Voltaje entrada)            │
+         │                                 │
+ [Isen]──┤ A1 (Corriente ACS712)           │
+         │                                 │
+ [Tsen]──┤ A2 (Temperatura NTC)            │
+         │                                 │
+         └─────────────────────────────────┘
+
+
+    SENSOR DE VOLTAJE (Divisor Resistivo)
+    ──────────────────────────────────────
+
+    +24V ───[1MΩ]───┬───[100kΩ]─── GND
+                    │
+                    └─────────────► Arduino A0
+                   (2.18V típico)
+
+
+    SENSOR DE CORRIENTE
+    ───────────────────
+
+                  ┌──────────────┐
+    +24V ─────────┤ IP+      VCC ├──── +5V
+                  │              │
+                  │   ACS712     │
+                  │   -20A       │
+                  │              │
+    Al circuito ──┤ IP-      OUT ├──── Arduino A1
+                  │          GND ├──── GND
+                  └──────────────┘
+
+
+    SENSOR DE TEMPERATURA
+    ─────────────────────
+
+    +5V ───[10kΩ]───┬───[NTC 10kΩ]─── GND
+                    │
+                    └─────────────────► Arduino A2
+
+
+═══════════════════════════════════════════════════════════════════════════
+            DIAGRAMA 7: CIRCUITO COMPLETO SIMPLIFICADO
+═══════════════════════════════════════════════════════════════════════════
+
+
+                      VISIÓN GENERAL DEL SISTEMA
+
+
+    ┌────────────────────────────────────────────────────────────────┐
+    │                    ENTRADA Y FILTRADO                          │
+    │                                                                │
+    │  ⊕─────⊗─────┬────[C][C]────┬─────────────────────────────┐   │
+    │  Bat  Fuse   │              │                             │   │
+    │  24V  30A   MOV            GND                            │   │
+    │  ⊖───────────┴──────────────┴─────────────────────────────┘   │
+    └──────────────────┬───────────────────────────────────────┬────┘
+                       │ +24V                                  │ GND
+                       │                                       │
+    ┌──────────────────┴───────────────────────────────────────┴────┐
+    │                   REGULADORES                                 │
+    │                                                                │
+    │  +24V──[LM7815]──+15V──[LM7805]──+5V                          │
+    │         (Drivers)        (Arduino)                            │
+    └───────────┬──────────────────────┬─────────────────────────────┘
+                │ +15V                 │ +5V
+                │                      │
+    ┌───────────┴──────────┐   ┌───────┴──────────────────────────┐
+    │   DRIVERS IR2110     │   │        ARDUINO                   │
+    │   ┌────────┐         │   │   ┌──────────────────┐          │
+    │   │Driver A│         │   │   │  ATmega328P      │          │
+    │   └───┬─┬──┘         │   │   │                  │          │
+    │       │ │            │   │   │  D9,D10,D3,D11   │          │
+    │   ┌───┴─┴──┐         │   │   │  ↓  ↓  ↓  ↓     │          │
+    │   │Driver B│         │   │   │  Señales PWM     │          │
+    │   └───┬─┬──┘         │   │   │  SPWM 31.25kHz   │          │
+    │       │ │            │   │   └──────────────────┘          │
+    └───────┼─┼────────────┘   └─────────┬──┬──┬──┬───────────────┘
+            │ │                          │  │  │  │
+            HO LO ×2                     │  │  │  │
+            │ │                          └──┼──┼──┘
+    ┌───────┴─┴──────────────────────────────┴──┴───────────────────┐
+    │                    PUENTE H (4 MOSFETs)                        │
+    │                                                                │
+    │   +24V──┬─────[Q1]─────┬─────[Q3]─────┬──+24V                │
+    │         │       │       │       │       │                     │
+    │         │    (NODO A) (NODO B)  │       │                     │
+    │         │       │       │       │       │                     │
+    │   GND───┴─────[Q2]─────┴─────[Q4]─────┴──GND                 │
+    │                 │           │                                 │
+    └─────────────────┴───────────┴─────────────────────────────────┘
+                      │           │
+                      │ Primario  │
+    ┌─────────────────┴───────────┴─────────────────────────────────┐
+    │              TRANSFORMADOR FERRITA                             │
+    │                                                                │
+    │   PRI: ╔══════════════╗  9 espiras                            │
+    │        ║   ETD49      ║  24V HF                               │
+    │   SEC: ╚══════════════╝  50 espiras                           │
+    │                          120V HF                              │
+    └────────────────┬────────────────────────────────────────┬─────┘
+                     │ Secundario                             │
+                     │                                        │
+    ┌────────────────┴────────────────────────────────────────┴─────┐
+    │                     FILTRO LC                                  │
+    │                                                                │
+    │   ───[═══════]───┬───[C 2.2µF]───┬──                         │
+    │      Inductor    │               │                            │
+    │        2mH       └───[C 100nF]───┴──                         │
+    │                          │                                    │
+    │                         MOV                                   │
+    └──────────────────┬───────┴───────┬────────────────────────────┘
+                       │               │
+                    ⊗──┴──             │
+                  Fusible              │
+                    5A                 │
+                     │                 │
+    ┌────────────────┴─────────────────┴──────────────────────────┐
+    │                    SALIDA 120V AC 60Hz                       │
+    │                                                              │
+    │          VIVO ──────────────► [Enchufe]                     │
+    │          NEUTRO ────────────► [  Salida]                    │
+    │                                                              │
+    └──────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+            LEYENDA Y NOTAS IMPORTANTES
+═══════════════════════════════════════════════════════════════════════════
+
+COMPONENTES PRINCIPALES:
+────────────────────────
+
+Q1, Q2, Q3, Q4    = MOSFETs IRF3205 (55V, 110A, RDS(on)=8mΩ)
+Driver A, B       = Circuitos integrados IR2110 o IR2184
+LM7815            = Regulador lineal 24V → 15V, 1A
+LM7805            = Regulador lineal 15V → 5V, 1A
+C1, C2 (entrada)  = Capacitores 2200µF/50V (filtro entrada)
+Fusible 30A       = Protección entrada (tipo automotriz)
+Fusible 5A        = Protección salida (250V AC)
+MOV 36V           = Varistor protección entrada
+MOV 180V          = Varistor protección salida
+Transformador     = Núcleo ETD49, ferrita N87, 9T:50T
+Inductor 2mH      = Toroidal, núcleo hierro, 10A
+C filtro 2.2µF    = Capacitor film, 250V, clase X2
+C filtro 100nF    = Capacitor film, 250V, supresión HF
+
+
+PUNTOS CRÍTICOS:
+────────────────
+
+1. TODOS los capacitores electrolíticos tienen POLARIDAD
+   + va a positivo, − va a negativo/GND
+
+2. TODOS los diodos tienen DIRECCIÓN
+   Corriente fluye de ánodo (−) a cátodo (|>)
+
+3. MOSFETs deben tener DISIPADORES con pasta térmica
+
+4. Cables de potencia deben ser GRUESOS (AWG 10-12)
+
+5. Separar físicamente control (Arduino) de potencia (MOSFETs)
+
+6. NO conectar carga hasta verificar voltaje de salida
+
+7. SIEMPRE usar fusibles de protección
+
+8. Transformador debe tener AISLAMIENTO mínimo 3kV
+
+
+SEÑALES PWM:
+────────────
+
+D9  → Q1 (High-side Brazo A) - Semiciclo positivo
+D10 → Q2 (Low-side Brazo A)  - Complemento
+D3  → Q3 (High-side Brazo B) - Semiciclo negativo  
+D11 → Q4 (Low-side Brazo B)  - Complemento
+
+Frecuencia PWM: 31.25 kHz
+Frecuencia salida: 60 Hz (configurable a 50 Hz)
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    FIN DEL ESQUEMA TRADICIONAL
+═══════════════════════════════════════════════════════════════════════════
