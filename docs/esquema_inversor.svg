@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620">
+  <style>
+    .wire { stroke: #1a1a1a; stroke-width: 3; fill: none; stroke-linecap: round; }
+    .bus { stroke: #000; stroke-width: 4; fill: none; stroke-linecap: round; }
+    .component { fill: #f9fbff; stroke: #1a1a1a; stroke-width: 2; }
+    .coil { fill: none; stroke: #1a1a1a; stroke-width: 2; }
+    .label { font-family: "Segoe UI", Arial, sans-serif; font-size: 14px; fill: #111; }
+    .label-small { font-family: "Segoe UI", Arial, sans-serif; font-size: 12px; fill: #111; }
+    .node { fill: #1a1a1a; }
+    .ground-line { stroke: #1a1a1a; stroke-width: 3; stroke-linecap: round; }
+    .ground-thin { stroke: #1a1a1a; stroke-width: 2; stroke-linecap: round; }
+    .dashed { stroke-dasharray: 6 6; }
+  </style>
+
+  <!-- DC input rails -->
+  <line x1="160" y1="150" x2="540" y2="150" class="bus" />
+  <line x1="160" y1="410" x2="540" y2="410" class="bus" />
+  <text x="170" y="140" class="label">Bus DC +12V</text>
+  <text x="170" y="430" class="label">Retorno / GND</text>
+
+  <!-- Battery -->
+  <line x1="90" y1="120" x2="90" y2="200" stroke="#1a1a1a" stroke-width="6" />
+  <line x1="110" y1="140" x2="110" y2="180" stroke="#1a1a1a" stroke-width="2" />
+  <line x1="90" y1="140" x2="160" y2="140" class="wire" />
+  <line x1="110" y1="180" x2="110" y2="410" class="wire" />
+  <text x="40" y="230" class="label" transform="rotate(-90 40 230)">Batería 12 Vcc</text>
+
+  <!-- Ground symbol -->
+  <line x1="110" y1="430" x2="140" y2="430" class="ground-line" />
+  <line x1="115" y1="440" x2="135" y2="440" class="ground-line" />
+  <line x1="120" y1="450" x2="130" y2="450" class="ground-line" />
+
+  <!-- Fuse -->
+  <rect x="160" y="132" width="60" height="36" rx="6" class="component" />
+  <text x="190" y="153" class="label" text-anchor="middle">F1 40 A</text>
+  <text x="190" y="170" class="label-small" text-anchor="middle">Protección</text>
+
+  <!-- DC Bus continuation -->
+  <line x1="220" y1="150" x2="540" y2="150" class="bus" />
+
+  <!-- Power switch -->
+  <line x1="145" y1="190" x2="180" y2="190" class="wire" />
+  <line x1="180" y1="190" x2="200" y2="170" class="wire" />
+  <line x1="200" y1="170" x2="200" y2="212" class="wire" />
+  <text x="145" y="210" class="label-small">SW1</text>
+  <text x="145" y="225" class="label-small">Interrupción</text>
+
+  <!-- H-bridge MOSFETs -->
+  <rect x="260" y="170" width="50" height="40" class="component" />
+  <text x="285" y="195" class="label" text-anchor="middle">Q1</text>
+  <text x="285" y="210" class="label-small" text-anchor="middle">IRF3205</text>
+  <rect x="260" y="270" width="50" height="40" class="component" />
+  <text x="285" y="295" class="label" text-anchor="middle">Q2</text>
+  <text x="285" y="310" class="label-small" text-anchor="middle">IRF3205</text>
+
+  <rect x="400" y="170" width="50" height="40" class="component" />
+  <text x="425" y="195" class="label" text-anchor="middle">Q3</text>
+  <text x="425" y="210" class="label-small" text-anchor="middle">IRF3205</text>
+  <rect x="400" y="270" width="50" height="40" class="component" />
+  <text x="425" y="295" class="label" text-anchor="middle">Q4</text>
+  <text x="425" y="310" class="label-small" text-anchor="middle">IRF3205</text>
+
+  <!-- MOSFET connections to DC bus -->
+  <line x1="285" y1="170" x2="285" y2="150" class="wire" />
+  <line x1="285" y1="310" x2="285" y2="410" class="wire" />
+  <line x1="425" y1="170" x2="425" y2="150" class="wire" />
+  <line x1="425" y1="310" x2="425" y2="410" class="wire" />
+
+  <!-- Bridge nodes -->
+  <line x1="310" y1="190" x2="360" y2="190" class="wire" />
+  <line x1="310" y1="290" x2="360" y2="290" class="wire" />
+  <line x1="360" y1="190" x2="360" y2="290" class="wire" />
+  <circle cx="360" cy="235" r="5" class="node" />
+  <text x="320" y="235" class="label-small">OUT_A</text>
+
+  <line x1="390" y1="190" x2="440" y2="190" class="wire" />
+  <line x1="390" y1="290" x2="440" y2="290" class="wire" />
+  <line x1="440" y1="190" x2="440" y2="290" class="wire" />
+  <circle cx="440" cy="235" r="5" class="node" />
+  <text x="446" y="235" class="label-small">OUT_B</text>
+
+  <!-- Transformer -->
+  <rect x="500" y="160" width="120" height="180" rx="12" class="component" />
+  <text x="560" y="185" class="label" text-anchor="middle">TR1</text>
+  <text x="560" y="205" class="label-small" text-anchor="middle">12 V ➜ 120 V</text>
+  <path d="M512 210 q10 -30 20 0 q10 30 20 0 q10 -30 20 0" class="coil" />
+  <path d="M568 210 q10 -30 20 0 q10 30 20 0 q10 -30 20 0" class="coil" />
+  <path d="M512 270 q10 -30 20 0 q10 30 20 0 q10 -30 20 0" class="coil" />
+  <path d="M568 270 q10 -30 20 0 q10 30 20 0 q10 -30 20 0" class="coil" />
+
+  <!-- Transformer connections -->
+  <line x1="440" y1="190" x2="500" y2="190" class="wire" />
+  <line x1="440" y1="290" x2="500" y2="290" class="wire" />
+  <line x1="620" y1="190" x2="680" y2="190" class="wire" />
+  <line x1="620" y1="290" x2="760" y2="290" class="wire" />
+
+  <!-- Output filter -->
+  <path d="M680 190 q8 -20 16 0 q8 20 16 0 q8 -20 16 0" class="coil" />
+  <text x="704" y="170" class="label-small" text-anchor="middle">L1 2 mH</text>
+  <line x1="720" y1="190" x2="760" y2="190" class="wire" />
+  <line x1="730" y1="190" x2="730" y2="250" class="wire" />
+  <line x1="750" y1="190" x2="750" y2="250" class="wire" />
+  <line x1="730" y1="250" x2="750" y2="250" class="wire" />
+  <text x="740" y="270" class="label-small" text-anchor="middle">C1 220 µF</text>
+
+  <!-- Output load -->
+  <rect x="780" y="180" width="80" height="140" class="component" />
+  <text x="820" y="205" class="label" text-anchor="middle">Carga AC</text>
+  <text x="820" y="225" class="label-small" text-anchor="middle">Salida 120 V~</text>
+  <line x1="760" y1="190" x2="780" y2="190" class="wire" />
+  <line x1="760" y1="290" x2="780" y2="290" class="wire" />
+  <line x1="780" y1="190" x2="780" y2="290" class="wire dashed" />
+  <text x="762" y="182" class="label-small">L</text>
+  <text x="762" y="300" class="label-small">N</text>
+
+  <!-- Gate driver -->
+  <rect x="240" y="430" width="260" height="90" rx="10" class="component" />
+  <text x="370" y="455" class="label" text-anchor="middle">Driver de compuertas IR2104</text>
+  <text x="370" y="475" class="label-small" text-anchor="middle">Bootstrap + Aislamiento</text>
+  <line x1="320" y1="430" x2="320" y2="410" class="wire" />
+  <text x="320" y="425" class="label-small" text-anchor="middle">Vcc 12 V</text>
+  <line x1="320" y1="520" x2="320" y2="545" class="wire" />
+  <line x1="420" y1="520" x2="420" y2="545" class="wire" />
+
+  <!-- Driver to MOSFET gates -->
+  <circle cx="260" cy="190" r="4" class="node" />
+  <circle cx="260" cy="290" r="4" class="node" />
+  <circle cx="400" cy="190" r="4" class="node" />
+  <circle cx="400" cy="290" r="4" class="node" />
+
+  <line x1="260" y1="190" x2="260" y2="430" class="wire" />
+  <line x1="260" y1="430" x2="300" y2="430" class="wire" />
+  <text x="242" y="210" class="label-small" transform="rotate(-90 242 210)">HO</text>
+
+  <line x1="260" y1="290" x2="260" y2="430" class="wire" />
+  <text x="242" y="310" class="label-small" transform="rotate(-90 242 310)">LO</text>
+
+  <line x1="400" y1="190" x2="400" y2="430" class="wire" />
+  <line x1="400" y1="430" x2="440" y2="430" class="wire" />
+  <text x="382" y="210" class="label-small" transform="rotate(-90 382 210)">HO</text>
+
+  <line x1="400" y1="290" x2="400" y2="430" class="wire" />
+  <text x="382" y="310" class="label-small" transform="rotate(-90 382 310)">LO</text>
+
+  <!-- Bootstrap diode and capacitor -->
+  <line x1="340" y1="430" x2="340" y2="400" class="wire" />
+  <polygon points="340,400 332,412 348,412" fill="#1a1a1a" />
+  <text x="340" y="395" class="label-small" text-anchor="middle">D1 UF4007</text>
+  <line x1="360" y1="430" x2="360" y2="385" class="wire" />
+  <line x1="360" y1="385" x2="380" y2="385" class="wire" />
+  <line x1="380" y1="385" x2="380" y2="430" class="wire" />
+  <line x1="360" y1="415" x2="380" y2="415" stroke="#1a1a1a" stroke-width="4" />
+  <text x="370" y="375" class="label-small" text-anchor="middle">Cboot 100 nF</text>
+
+  <!-- Arduino controller -->
+  <rect x="40" y="450" width="170" height="110" rx="12" class="component" />
+  <text x="125" y="475" class="label" text-anchor="middle">Arduino UNO</text>
+  <text x="125" y="495" class="label-small" text-anchor="middle">PWM SPWM D5 / D6</text>
+  <line x1="210" y1="475" x2="240" y2="475" class="wire" />
+  <line x1="210" y1="495" x2="240" y2="495" class="wire" />
+  <text x="215" y="470" class="label-small">PWM_A</text>
+  <text x="215" y="490" class="label-small">PWM_B</text>
+  <line x1="125" y1="560" x2="125" y2="580" class="wire" />
+  <text x="125" y="595" class="label-small" text-anchor="middle">GND común</text>
+
+  <!-- Feedback network -->
+  <line x1="760" y1="190" x2="820" y2="340" class="wire" />
+  <rect x="820" y="320" width="60" height="70" class="component" />
+  <text x="850" y="345" class="label" text-anchor="middle">Sensado</text>
+  <text x="850" y="365" class="label-small" text-anchor="middle">Divisor resistivo</text>
+  <line x1="850" y1="390" x2="850" y2="430" class="wire" />
+  <line x1="850" y1="430" x2="500" y2="430" class="wire" />
+  <line x1="500" y1="430" x2="500" y2="500" class="wire" />
+  <line x1="500" y1="500" x2="240" y2="500" class="wire" />
+  <text x="505" y="420" class="label-small">A0</text>
+
+  <!-- Notes -->
+  <text x="560" y="60" class="label" text-anchor="middle">Esquema eléctrico inversor Arduino 12 V ➜ 120 V</text>
+  <text x="560" y="80" class="label-small" text-anchor="middle">Control PWM senoidal, puente H MOSFET, transformador elevador y filtro LC.</text>
+</svg>
