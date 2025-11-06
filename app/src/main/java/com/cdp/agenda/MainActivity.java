@@ -57,6 +57,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         if (item.getItemId() == R.id.menuNuevo) {
             nuevoRegistro();
             return true;
+        } else if (item.getItemId() == R.id.menuEsquema) {
+            Intent intent = new Intent(this, EsquemaActivity.class);
+            startActivity(intent);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

@@ -5,4 +5,5 @@
     <string name="hint_correo_electronico">Correo electronico:</string>
     <string name="btn_guarda">Guardar registro</string>
     <string name="menu_nuevo">Nuevo registro</string>
+    <string name="menu_esquema">Esquema Arduino Inverter</string>
 </resources>
