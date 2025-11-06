@@ -1,0 +1,362 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║            ESQUEMA SIMPLIFICADO Y FUNCIONAL                               ║
+║        Versión compacta para construcción rápida                          ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    DIAGRAMA FUNCIONAL SIMPLIFICADO
+═══════════════════════════════════════════════════════════════════════════
+
+                       ENTRADA              CONTROL            SALIDA
+                         24V                ARDUINO            120V AC
+                          │                    │                 │
+                          ▼                    ▼                 ▼
+                    ┌──────────┐         ┌─────────┐      ┌──────────┐
+                    │          │         │         │      │          │
+    Batería ──────► │  FILTRO  ├────────►│ DRIVERS ├─────►│  PUENTE  │
+      24V DC        │  ENTRADA │   PWM   │ IR2110  │ Gates│    H     │
+                    │ C=4400µF │         │   ×2    │      │ Q1-Q4    │
+                    │          │         │         │      │          │
+                    └──────────┘         └─────────┘      └────┬─────┘
+                                                                │
+                                         Sensores               │
+                                            │                   ▼
+                                            └──────────► ┌─────────────┐
+                                               A0-A2     │TRANSFORMADOR│
+                                                         │   FERRITA   │
+                                                         │ 24V → 120V  │
+                                                         │  31.25kHz   │
+                                                         └──────┬──────┘
+                                                                │
+                                                                ▼
+                                                         ┌─────────────┐
+                                                         │  FILTRO LC  │
+                                                         │ L=2mH       │
+                                                         │ C=2.2µF     │
+                                                         └──────┬──────┘
+                                                                │
+                                                                ▼
+                                                         ┌─────────────┐
+                                                         │  SALIDA AC  │
+                                                         │   120V 60Hz │
+                                                         │             │
+                                                         └─────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+                 CONEXIONES MÍNIMAS - VERSIÓN BÁSICA
+═══════════════════════════════════════════════════════════════════════════
+
+1. ALIMENTACIÓN
+   ─────────────
+   Batería + ──[F 30A]──[C 4400µF]──┬── +24V (al puente H)
+                                     │
+   Batería - ────────────────────────┴── GND
+
+
+2. ARDUINO → DRIVERS
+   ──────────────────
+   Arduino D9  ───────────────────────► Driver A, HIN
+   Arduino D10 ───────────────────────► Driver A, LIN
+   Arduino D3  ───────────────────────► Driver B, HIN
+   Arduino D11 ───────────────────────► Driver B, LIN
+   Arduino GND ───────────────────────► Driver GND común
+
+
+3. DRIVERS → MOSFETS (Brazo A)
+   ────────────────────────────
+   Driver A (HO) ──[10Ω]──► Q1 Gate (High-side)
+   Driver A (LO) ──[10Ω]──► Q2 Gate (Low-side)
+
+
+4. DRIVERS → MOSFETS (Brazo B)
+   ────────────────────────────
+   Driver B (HO) ──[10Ω]──► Q3 Gate (High-side)
+   Driver B (LO) ──[10Ω]──► Q4 Gate (Low-side)
+
+
+5. PUENTE H
+   ─────────
+   +24V ────┬──── Q1 Drain
+            │
+            └──── Q3 Drain
+
+   Q1 Source ──┬──── Nodo A ──┐
+               │               │
+   Q2 Drain ───┘               ├──► Transformador Primario
+                               │
+   Q3 Source ──┬──── Nodo B ──┘
+               │
+   Q4 Drain ───┘
+
+   Q2 Source ──┬──── GND
+               │
+   Q4 Source ──┘
+
+
+6. TRANSFORMADOR → FILTRO → SALIDA
+   ─────────────────────────────────
+   Transformador Sec. 1 ──[L 2mH]──┬──[C 2.2µF]── GND
+                                    │
+                                    └──► 120V AC OUT
+
+   Transformador Sec. 2 ────────────────► NEUTRO
+
+
+═══════════════════════════════════════════════════════════════════════════
+            CIRCUITO MÍNIMO FUNCIONAL (Sin protecciones)
+═══════════════════════════════════════════════════════════════════════════
+
++24V ─┬─[F]─┬─[C]───┬────────────────────────┬────────────────── +24V Bus
+      │     │       │                        │
+     MOV   C1   ┌───┴──┐              ┌──────┴───┐
+      │   2200  │  Q1  │              │   Q3     │
+      │    µF   │IRF   │              │  IRF     │
+      │         │3205  │              │  3205    │
+      │         └───┬──┘              └────┬─────┘
+      │             │                      │
+      │          (Nodo A)              (Nodo B)
+      │             │                      │
+      │             ├──────[TRANSF.]───────┤
+      │             │     Primario         │
+      │         ┌───┴──┐              ┌────┴─────┐
+      │         │  Q2  │              │   Q4     │
+      │         │IRF   │              │  IRF     │
+      │         │3205  │              │  3205    │
+      │         └───┬──┘              └────┬─────┘
+      │             │                      │
+GND ──┴─────────────┴──────────────────────┴────────────────────── GND Bus
+
+                    [TRANSFORMADOR]
+                    Primario: A-B
+                    Secundario: 120V ──[L]──┬──[C]── GND
+                                            │
+                                         Salida AC
+
+[ARDUINO]
+  D9  ───► [Driver A] ───► Q1 Gate
+  D10 ───► [Driver A] ───► Q2 Gate
+  D3  ───► [Driver B] ───► Q3 Gate
+  D11 ───► [Driver B] ───► Q4 Gate
+
+
+═══════════════════════════════════════════════════════════════════════════
+                  VISTA DE MONTAJE EN PLACA (TOP VIEW)
+═══════════════════════════════════════════════════════════════════════════
+
+                        [Vista superior PCB]
+
+     ┌───────────────────────────────────────────────────────────┐
+     │                                                           │
+     │  IN+  IN-                                         OUT+  OUT- │
+     │   ┃   ┃                                            ┃    ┃   │
+     │   ┃   ┃      ┌────────┐                           ┃    ┃   │
+     │   ┃   ╠══════╡ Driver ╞═══════╗                   ┃    ┃   │
+     │   ┃   ║      │   A    │       ║                   ┃    ┃   │
+     │   ┃   ║      └────────┘       ║                   ┃    ┃   │
+     │   ┃   ║                       ║                   ┃    ┃   │
+     │   ┃   ║      ┌───────┐   ┌───────┐               ┃    ┃   │
+     │   ┃   ║      │  Q1   │   │  Q3   │               ┃    ┃   │
+     │   ┃   ╠══════╡HS-A   ╞═══╡HS-B   ╞═══════════════╣    ┃   │
+     │   ┃   ║      └───────┘   └───────┘               ║    ┃   │
+     │   ┃   ║          ║           ║                   ║    ┃   │
+     │   ┃   ║          ║    [T]    ║                   ║    ┃   │
+     │   ┃   ║          ║   [R]    ║                   ║    ┃   │
+     │   ┃   ║          ║   [A]    ║                   ║    ┃   │
+     │   ┃   ║          ║   [N]    ║                   ║    ┃   │
+     │   ┃   ║          ║   [S]    ║                   ║    ┃   │
+     │   ┃   ║      ┌───────┐   ┌───────┐               ║    ┃   │
+     │   ┃   ║      │  Q2   │   │  Q4   │               ║    ┃   │
+     │   ┃   ╠══════╡ LS-A  ╞═══╡ LS-B  ╞═══════════════╣    ┃   │
+     │   ┃   ║      └───────┘   └───────┘               ║    ┃   │
+     │   ┃   ║                       ║                   ║    ┃   │
+     │   ┃   ║      ┌────────┐       ║                   ║    ┃   │
+     │   ┃   ╠══════╡ Driver ╞═══════╝                   ║    ┃   │
+     │   ┃   ┃      │   B    │                           ║    ┃   │
+     │   ┃   ┃      └────────┘                           ║    ┃   │
+     │   ┃   ┃                                            ║    ┃   │
+     │   ┗━━━╋════════════════════════════════════════════╝    ┃   │
+     │       ┃                                                 ┃   │
+     │  [ARDUINO]  [LCD]  [Sensores]                          ┃   │
+     │       ┃                                                 ┃   │
+     │       ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   │
+     │                          GND                                │
+     └───────────────────────────────────────────────────────────┘
+
+LEYENDA:
+─────────
+══════  Pistas de potencia gruesas (mínimo 3mm)
+─────   Pistas de señal delgadas
+[T]     Transformador (montaje vertical)
+Q1-Q4   MOSFETs con disipadores
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    LISTA DE VERIFICACIÓN PRE-ENERGIZACIÓN
+═══════════════════════════════════════════════════════════════════════════
+
+ANTES DE CONECTAR LA BATERÍA:
+
+☐ 1. Verificar polaridad de capacitores electrolíticos
+☐ 2. Verificar orientación de todos los diodos
+☐ 3. Medir resistencia entre +24V y GND (debe ser > 100kΩ)
+☐ 4. Verificar que no hay cortocircuitos con multímetro
+☐ 5. Comprobar que MOSFETs tienen disipadores
+☐ 6. Pasta térmica aplicada correctamente
+☐ 7. Tornillos de MOSFETs bien apretados
+☐ 8. Arduino programado correctamente
+☐ 9. Fusible instalado en entrada
+☐ 10. NO hay carga conectada en salida
+
+PRIMERA ENERGIZACIÓN (Solo Arduino):
+
+☐ 1. Alimentar solo Arduino (por USB o 5V externo)
+☐ 2. Verificar LED parpadeando
+☐ 3. Verificar mensajes en Serial Monitor
+☐ 4. LCD mostrando información (si instalado)
+
+SEGUNDA ENERGIZACIÓN (Con drivers, sin MOSFETs):
+
+☐ 1. Desconectar gates de MOSFETs (dejar flotando temporalmente)
+☐ 2. Conectar alimentación +15V a drivers
+☐ 3. Conectar batería 24V
+☐ 4. Medir señales HO, LO con osciloscopio
+☐ 5. Verificar tiempo muerto entre High y Low side
+☐ 6. Si OK, desconectar todo
+
+TERCERA ENERGIZACIÓN (Sistema completo, sin carga):
+
+☐ 1. Conectar gates de MOSFETs
+☐ 2. Conectar transformador
+☐ 3. Conectar batería 24V
+☐ 4. Pulsar Enable por 1-2 segundos solamente
+☐ 5. Medir voltaje AC en salida (debe ser ~120V)
+☐ 6. Tocar disipadores (deben estar fríos/tibios)
+☐ 7. Verificar forma de onda con osciloscopio
+☐ 8. Si todo OK, procedeer a prueba con carga
+
+CUARTA ENERGIZACIÓN (Con carga ligera):
+
+☐ 1. Conectar lámpara incandescente 25W como carga
+☐ 2. Pulsar Enable
+☐ 3. Verificar que lámpara enciende correctamente
+☐ 4. Medir voltaje (debe permanecer ~120V)
+☐ 5. Dejar funcionando 5 minutos
+☐ 6. Monitorear temperatura cada minuto
+☐ 7. Si temperatura OK (<60°C), aumentar carga
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    GUÍA RÁPIDA DE TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════
+
+PROBLEMA: No enciende / No hay señal PWM
+─────────────────────────────────────────
+1. Verificar alimentación Arduino (LED de placa encendido)
+2. Verificar código cargado correctamente
+3. Pulsar botón Enable
+4. Medir con voltímetro pines D9, D10, D3, D11 (deben variar)
+
+PROBLEMA: Drivers no conmutan
+──────────────────────────────
+1. Verificar alimentación drivers (+15V presente)
+2. Verificar conexión HIN, LIN desde Arduino
+3. Verificar capacitor bootstrap cargado
+4. Medir con osciloscopio salidas HO, LO
+
+PROBLEMA: MOSFETs se calientan excesivamente
+─────────────────────────────────────────────
+1. APAGAR INMEDIATAMENTE
+2. Verificar que gates están conectados correctamente
+3. Verificar resistores de gate (10Ω) instalados
+4. Verificar que no hay conducción simultánea (shoot-through)
+5. Mejorar disipación (disipadores más grandes o ventilador)
+
+PROBLEMA: No hay voltaje en salida
+───────────────────────────────────
+1. Verificar que transformador está conectado correctamente
+2. Medir voltaje en nodos A y B (debe ser cuadrada de 24V)
+3. Verificar continuidad devanados transformador
+4. Verificar que filtro LC no está en cortocircuito
+
+PROBLEMA: Voltaje de salida bajo
+─────────────────────────────────
+1. Verificar relación de espiras transformador
+2. Aumentar amplitud PWM en código (amplitudeScale)
+3. Verificar caída de voltaje en MOSFETs (RDS(on))
+4. Medir voltaje de entrada (batería puede estar descargada)
+
+PROBLEMA: Forma de onda distorsionada
+──────────────────────────────────────
+1. Ajustar valores del filtro LC
+2. Verificar que carga no es demasiado inductiva
+3. Verificar que frecuencia PWM es correcta (31.25kHz)
+4. Revisar tabla sinusoidal en código
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    VALORES TÍPICOS DE MEDICIÓN
+═══════════════════════════════════════════════════════════════════════════
+
+Con batería 24V, sin carga:
+───────────────────────────
+Voltaje entrada:           24.0V - 24.5V
+Corriente entrada:         0.5A - 1.0A (consumo propio)
+Voltaje salida AC (RMS):   118V - 122V
+Frecuencia salida:         59.5Hz - 60.5Hz
+Temperatura MOSFETs:       30°C - 40°C (tibio al tacto)
+
+Con carga 100W (bombilla):
+──────────────────────────
+Voltaje entrada:           23.5V - 24.0V (ligera caída)
+Corriente entrada:         5.0A - 5.5A (depende eficiencia)
+Voltaje salida AC (RMS):   117V - 120V
+Temperatura MOSFETs:       40°C - 55°C (caliente pero soportable)
+Eficiencia estimada:       85% - 90%
+
+Con carga 500W (máxima):
+────────────────────────
+Voltaje entrada:           23.0V - 24.0V
+Corriente entrada:         23A - 25A
+Voltaje salida AC (RMS):   115V - 120V
+Temperatura MOSFETs:       60°C - 75°C (requiere ventilación)
+Eficiencia estimada:       88% - 90%
+
+⚠ Si temperatura excede 80°C: APAGAR y mejorar enfriamiento
+
+
+═══════════════════════════════════════════════════════════════════════════
+                    AJUSTES Y OPTIMIZACIÓN
+═══════════════════════════════════════════════════════════════════════════
+
+Ajuste de voltaje de salida:
+────────────────────────────
+Si voltaje muy alto:    Reducir espiras secundario o amplitudeScale
+Si voltaje muy bajo:    Aumentar espiras secundario o amplitudeScale
+
+Ajuste de frecuencia:
+─────────────────────
+Para 50Hz (Europa):    Cambiar SINE_FREQ de 60 a 50 en código
+Para 400Hz (aviación): Cambiar SINE_FREQ a 400
+
+Ajuste de tiempo muerto:
+────────────────────────
+Si hay shoot-through:   Aumentar DEAD_TIME en código
+Si eficiencia baja:     Reducir DEAD_TIME (con precaución)
+
+Mejora de forma de onda:
+────────────────────────
+THD muy alto:          Aumentar SAMPLES (128→256→512)
+                       Ajustar filtro LC (mayor L o C)
+Rizado alto:           Aumentar capacitancia filtro salida
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+            FIN DEL ESQUEMA SIMPLIFICADO
+
+    Para diagrama completo ver: ESQUEMA_ELECTRICO_COMPLETO.txt
+    Para código ver: inversor_sinusoidal_24v_120v.ino
+
+═══════════════════════════════════════════════════════════════════════════
