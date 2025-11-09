@@ -1,0 +1,30 @@
+╔══════════════════════════════════════════════════════════════╗
+║          INSTRUCCIONES PARA DESCARGAR ESQUEMAS               ║
+╚══════════════════════════════════════════════════════════════╝
+
+📦 ARCHIVO DISPONIBLE:
+   esquemas_inversor.zip (19 KB)
+
+📁 CONTIENE:
+   ✓ ESQUEMA_ARQUITECTURA.md (83 KB)
+   ✓ SCHEMATIC_VISUAL.md (38 KB)
+   ✓ inverter_easyeda.json (7.7 KB)
+
+🌐 PARA DESCARGAR EN TU TELÉFONO:
+
+Opción A - Desde GitHub:
+1. Haz push desde tu computadora:
+   cd Arduino-inverter
+   git push origin main
+
+2. Abre en tu teléfono:
+   https://github.com/Tecno-Plus/Arduino-inverter
+
+3. Descarga cada archivo individualmente
+
+Opción B - Transferir directamente:
+1. Este archivo está en: /workspace/esquemas_inversor.zip
+2. Usa SCP, FTP o el gestor de archivos de tu IDE
+3. Transfiere el ZIP a tu dispositivo
+
+══════════════════════════════════════════════════════════════
