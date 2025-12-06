@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Componentes de Sistema Fotovoltaico Híbrido</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+        header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+
+        .intro {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .intro h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .intro p {
+            color: #555;
+            font-size: 1.1em;
+            text-align: justify;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .component-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .component-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .component-icon {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .component-card h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .component-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .component-card ul li {
+            padding: 8px 0;
+            color: #555;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .component-card ul li:before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+            color: #f39c12;
+        }
+
+        .component-card .description {
+            color: #7f8c8d;
+            margin-top: 15px;
+            font-style: italic;
+            text-align: justify;
+        }
+
+        .diagram {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .diagram h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .flow-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            min-width: 250px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: white;
+        }
+
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .components-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-item {
+                min-width: 200px;
+            }
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>☀️ Sistema Fotovoltaico Híbrido</h1>
+            <p>Guía Completa de Componentes</p>
+        </header>
+
+        <div class="intro">
+            <h2>¿Qué es un Sistema Fotovoltaico Híbrido?</h2>
+            <p>
+                Un sistema fotovoltaico híbrido combina la generación de energía solar con almacenamiento en baterías 
+                y conexión a la red eléctrica. Este tipo de sistema permite <span class="highlight">autoconsumo</span>, 
+                <span class="highlight">almacenamiento de energía</span> y <span class="highlight">venta de excedentes</span> 
+                a la red, ofreciendo máxima flexibilidad y eficiencia energética.
+            </p>
+        </div>
+
+        <div class="components-grid">
+            <div class="component-card">
+                <div class="component-icon">🔆</div>
+                <h3>Paneles Solares</h3>
+                <ul>
+                    <li>Captan la radiación solar</li>
+                    <li>Generan corriente continua (CC)</li>
+                    <li>Potencia típica: 300-500W por panel</li>
+                    <li>Vida útil: 25-30 años</li>
+                </ul>
+                <p class="description">
+                    Los paneles fotovoltaicos son el corazón del sistema, convirtiendo la luz solar directamente 
+                    en electricidad mediante el efecto fotovoltaico.
+                </p>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">⚙️</div>
+                <h3>Inversor Híbrido</h3>
+                <ul>
+                    <li>Convierte CC a CA (corriente alterna)</li>
+                    <li>Gestiona carga de baterías</li>
+                    <li>Conecta con la red eléctrica</li>
+                    <li>Prioriza autoconsumo</li>
+                </ul>
+                <p class="description">
+                    El inversor híbrido es el cerebro del sistema, coordinando entre paneles, baterías y red eléctrica 
+                    para optimizar el consumo energético.
+                </p>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">🔋</div>
+                <h3>Baterías</h3>
+                <ul>
+                    <li>Almacenan energía excedente</li>
+                    <li>Suministran energía en ausencia de sol</li>
+                    <li>Tipos: Litio, Plomo-ácido, AGM</li>
+                    <li>Capacidad: 5-20 kWh típicamente</li>
+                </ul>
+                <p class="description">
+                    Las baterías permiten almacenar la energía generada durante el día para usarla durante la noche 
+                    o en días nublados, garantizando suministro continuo.
+                </p>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">🎛️</div>
+                <h3>Controlador de Carga</h3>
+                <ul>
+                    <li>Regula carga de baterías</li>
+                    <li>Protege contra sobrecarga</li>
+                    <li>Maximiza eficiencia (MPPT)</li>
+                    <li>Monitorea estado de baterías</li>
+                </ul>
+                <p class="description">
+                    El controlador de carga protege las baterías y optimiza la transferencia de energía desde los paneles, 
+                    extendiendo su vida útil.
+                </p>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">📊</div>
+                <h3>Sistema de Monitoreo</h3>
+                <ul>
+                    <li>App móvil o web</li>
+                    <li>Monitorea producción en tiempo real</li>
+                    <li>Consumo energético</li>
+                    <li>Estado de baterías</li>
+                </ul>
+                <p class="description">
+                    Permite supervisar el rendimiento del sistema, producción de energía, consumo y estado de todos 
+                    los componentes desde cualquier dispositivo.
+                </p>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">🛡️</div>
+                <h3>Protecciones Eléctricas</h3>
+                <ul>
+                    <li>Fusibles y disyuntores</li>
+                    <li>Protector contra sobretensiones</li>
+                    <li>Interruptor de desconexión</li>
+                    <li>Puesta a tierra</li>
+                </ul>
+                <p class="description">
+                    Elementos de seguridad esenciales que protegen el sistema y los usuarios contra sobrecargas, 
+                    cortocircuitos y otros riesgos eléctricos.
+                </p>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">🏗️</div>
+                <h3>Estructura de Soporte</h3>
+                <ul>
+                    <li>Soportes para paneles</li>
+                    <li>Anclajes y fijaciones</li>
+                    <li>Orientación e inclinación óptima</li>
+                    <li>Resistencia a viento y clima</li>
+                </ul>
+                <p class="description">
+                    La estructura física que sostiene los paneles solares, diseñada para maximizar la captación solar 
+                    y resistir condiciones climáticas adversas.
+                </p>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">🔌</div>
+                <h3>Cableado y Conexiones</h3>
+                <ul>
+                    <li>Cables solares especializados</li>
+                    <li>Conectores MC4</li>
+                    <li>Cajas de conexión</li>
+                    <li>Organización y canalización</li>
+                </ul>
+                <p class="description">
+                    Infraestructura de cableado que interconecta todos los componentes del sistema, diseñada para 
+                    minimizar pérdidas y garantizar seguridad.
+                </p>
+            </div>
+        </div>
+
+        <div class="diagram">
+            <h2>Flujo de Energía en el Sistema</h2>
+            <div class="flow-diagram">
+                <div class="flow-item">☀️ Radiación Solar</div>
+                <div class="arrow">↓</div>
+                <div class="flow-item">🔆 Paneles Solares (CC)</div>
+                <div class="arrow">↓</div>
+                <div class="flow-item">⚙️ Inversor Híbrido</div>
+                <div class="arrow">↓</div>
+                <div class="flow-item">⚡ Distribución de Energía</div>
+                <div style="display: flex; gap: 20px; margin-top: 10px;">
+                    <div class="flow-item" style="min-width: 200px;">🏠 Consumo</div>
+                    <div class="flow-item" style="min-width: 200px;">🔋 Baterías</div>
+                    <div class="flow-item" style="min-width: 200px;">🔌 Red Eléctrica</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 - Guía de Componentes de Sistema Fotovoltaico Híbrido</p>
+            <p>Información educativa sobre energía solar renovable</p>
+        </footer>
+    </div>
+
+    <script>
+        // Efecto de animación al hacer scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Aplicar animación a las tarjetas
+        document.querySelectorAll('.component-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+
+        // Efecto de click en las tarjetas
+        document.querySelectorAll('.component-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+            });
+        });
+    </script>
+</body>
+</html>
