@@ -1,0 +1,114 @@
+CÁLCULO DE AUTOCONSUMO PARA SISTEMA FOTOVOLTAICO
+Sistema: Híbrido 48V 60Hz | Voltaje de alimentación: 110V Monofásico | Reserva: 1 día
+
+EQUIPOS Y CONSUMO DIARIO,,,,,,
+Nº,Equipo,Cantidad,Potencia Unitaria (W),Horas de Uso/Día,Consumo Diario Total (Wh/día),Observaciones
+1,Cocina eléctrica,1,1500,2,3000,Alto consumo
+2,Olla multipropósito,1,900,1.5,1350,
+3,Cocina de inducción,1,1800,1.5,2700,Alto consumo
+4,Refrigerador,1,150,24,3600,Ciclo de trabajo 50%
+5,Nevera,1,100,24,2400,Ciclo de trabajo 50%
+6,Horno de aire,1,1400,1,1400,
+7,Batidora,1,300,0.25,75,
+8,Microondas,1,1000,0.5,500,
+9,Lavadora semiautomática,1,350,1,350,
+10,Ducha eléctrica,1,4500,0.5,2250,Muy alto consumo
+11,Televisor 55 pulgadas,1,120,6,720,LED
+12,Ventiladores,4,60,8,1920,60W c/u
+13,Lámparas LED,15,10,5,750,10W c/u
+14,Split (Aire acondicionado),1,1200,8,9600,Varía según uso
+15,Cargadores de teléfonos,2,10,2,40,5V/2A
+16,Cargador de moto/bici eléctrica,1,200,3,600,Estimado
+17,Radio,1,15,4,60,
+18,Teatro en casa 5.1,1,150,4,600,
+,,,,TOTAL CONSUMO DIARIO:,31915,Wh/día
+
+CÁLCULO DEL SISTEMA FOTOVOLTAICO,,,,,,
+Parámetro,Valor,Unidad,Fórmula/Nota,,
+,,,,,,
+Consumo diario total,31915,Wh/día,Suma de todos los equipos,,
+Factor de seguridad,1.25,,Pérdidas del sistema (inversores eficiencia 80%),,
+Consumo ajustado,39894,Wh/día,Consumo total × Factor de seguridad,,
+,,,,,,
+DIMENSIONAMIENTO DE PANELES SOLARES,,,,,,
+Horas sol pico (HSP),5,h/día,Ajustar según ubicación geográfica,,
+Potencia pico requerida,7979,Wp,Consumo ajustado / HSP,,
+Potencia pico recomendada,8500,Wp,Redondeado al alza,,
+,,,,,,
+Ejemplo configuración paneles:,,,,,,
+- Opción 1: 17 paneles de 500W,8500,Wp,,,
+- Opción 2: 21 paneles de 400W,8400,Wp,,,
+- Opción 3: 24 paneles de 350W,8400,Wp,,,
+,,,,,,
+DIMENSIONAMIENTO DE BATERÍAS (48V),,,,,,
+Autonomía requerida,1,día,Según especificación,,
+Capacidad requerida,39894,Wh,Consumo diario × Días autonomía,,
+Profundidad de descarga (DoD),50,%,Baterías de plomo-ácido,,
+Capacidad real necesaria,79788,Wh,Cap. requerida / DoD,,
+,,,,,,
+Capacidad en Ah (48V),1662,Ah,Capacidad real / Voltaje sistema,,
+Capacidad recomendada,1800,Ah,Redondeado al alza,,
+,,,,,,
+Ejemplo configuración baterías 48V:,,,,,,
+- Opción 1: 18 baterías 12V 600Ah,1800,Ah,4 en serie × 3 strings en paralelo = 2400Ah @ 48V,,
+- Opción 2: 36 baterías 12V 200Ah,1800,Ah,4 en serie × 9 strings en paralelo = 1800Ah @ 48V,,
+- Opción 3: 24 baterías 12V 300Ah,1800,Ah,4 en serie × 6 strings en paralelo = 1800Ah @ 48V,,
+,,,,,,
+Si usa baterías de litio (LiFePO4):,,,,,,
+Profundidad de descarga (DoD),80,%,Mayor que plomo-ácido,,
+Capacidad real necesaria,49868,Wh,Cap. requerida / DoD (80%),,
+Capacidad en Ah (48V),1039,Ah,Capacidad real / Voltaje sistema,,
+Capacidad recomendada litio,1100,Ah,Redondeado al alza,,
+,,,,,,
+DIMENSIONAMIENTO DEL INVERSOR,,,,,,
+Potencia máxima simultánea,8500,W,Suma de equipos que pueden estar encendidos simultáneamente,,
+Factor de arranque (motores),1.3,,Para equipos con motor (refrigerador nevera),,
+Potencia inversor recomendada,11000,W,Potencia máxima × Factor arranque,,
+Potencia inversor sugerida,12000,W,12kW inversor híbrido 48V,,
+,,,,,,
+REGULADOR DE CARGA (MPPT),,,,,,
+Potencia paneles,8500,Wp,,,
+Voltaje sistema,48,V,,,
+Corriente máxima,177,A,Potencia paneles / Voltaje sistema,,
+Capacidad regulador recomendada,200,A,Con margen de seguridad,,
+Configuración sugerida:,,,,,,
+- 1 Regulador MPPT 200A 48V,200,A,o,,
+- 2 Reguladores MPPT 100A 48V,200,A,en paralelo,,
+
+RECOMENDACIONES IMPORTANTES,,,,,,
+1,Consumo muy alto: El consumo diario de 31.9 kWh es considerable. Se recomienda:,,,,
+,- Usar la cocina eléctrica ducha eléctrica y horno con moderación,,,,
+,- Considerar alternativas de gas para cocción y calentamiento de agua,,,,
+,- Optimizar el uso del aire acondicionado (mayor consumidor con 9.6 kWh/día),,,,
+,,,,,,
+2,Inversión significativa: Este sistema requiere una inversión considerable en paneles y baterías,,,,
+,,,,,,
+3,Optimización sugerida: Si se reduce el uso de equipos de alto consumo:,,,,
+,- Sin ducha eléctrica: Ahorro de 2250 Wh/día,,,,
+,- Reducir cocción eléctrica a la mitad: Ahorro de 3725 Wh/día,,,,
+,- Reducir uso de Split a 4h/día: Ahorro de 4800 Wh/día,,,,
+,Total ahorro posible: 10775 Wh/día (Sistema reduciría a ~21 kWh/día),,,,
+,,,,,,
+4,Mantenimiento: Revisar conexiones baterías y limpiar paneles regularmente,,,,
+,,,,,,
+5,Ubicación: Instalar paneles con orientación sur (hemisferio norte) o norte (hemisferio sur),,,,
+,Ángulo de inclinación según latitud para máxima captación solar,,,,
+
+PRESUPUESTO ESTIMADO (Valores referenciales USD),,,,,,
+Componente,Cantidad,Precio Unit.,Precio Total,,
+Paneles solares 500W,17,180,3060,,
+Baterías 12V 200Ah (plomo),36,150,5400,,
+Inversor híbrido 12kW 48V,1,2500,2500,,
+Regulador MPPT 200A 48V,1,800,800,,
+Estructura de montaje,1,600,600,,
+Cableado y protecciones,1,500,500,,
+Instalación,1,1500,1500,,
+,,,TOTAL ESTIMADO:,14360,USD
+,,,,,,
+Nota: Precios aproximados pueden variar según región marca y proveedor,,,,,,
+
+ALTERNATIVA CON BATERÍAS DE LITIO,,,,,,
+Baterías LiFePO4 48V 100Ah,11,850,9350,,
+Otros componentes (igual),,,5460,,
+,,,TOTAL CON LITIO:,18810,USD
+Ventaja: Mayor vida útil (10+ años vs 3-5 años) y mejor eficiencia,,,,
