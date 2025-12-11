@@ -1,0 +1,99 @@
+CÁLCULO DE AUTOCONSUMO - SISTEMA FOTOVOLTAICO HÍBRIDO 48V
+Sistema: 110V Monofásico - 60Hz - Reserva: 1 día
+
+EQUIPOS,CANTIDAD,POTENCIA UNITARIA (W),POTENCIA TOTAL (W),HORAS/DÍA,CONSUMO DIARIO (Wh),FACTOR USO,CONSUMO REAL (Wh)
+Cocina eléctrica,1,2000,2000,2,4000,0.7,2800
+Olla multipropósito,1,800,800,1,800,1,800
+Cocina de inducción,1,2000,2000,1.5,3000,0.8,2400
+Refrigerador,1,150,150,24,3600,0.4,1440
+Nevera,1,120,120,24,2880,0.4,1152
+Horno de aire,1,1500,1500,1,1500,1,1500
+Batidora,1,300,300,0.25,75,1,75
+Microondas,1,1200,1200,0.5,600,1,600
+Lavadora semiautomática,1,500,500,1.5,750,1,750
+Ducha eléctrica,1,4500,4500,0.5,2250,1,2250
+Televisor 55 pulgadas,1,120,120,6,720,1,720
+Ventiladores,4,75,300,8,2400,0.8,1920
+Lámparas LED,15,10,150,5,750,0.9,675
+Split (Aire acondicionado),1,1200,1200,8,9600,0.7,6720
+Cargadores de teléfonos,2,10,20,3,60,1,60
+Cargador de motorina,1,100,100,2,200,1,200
+Radio,1,15,15,4,60,1,60
+Teatro en casa 5.1,1,150,150,4,600,1,600
+
+RESUMEN DEL SISTEMA,,,,,,
+Descripción,,,Valor,Unidad,,
+,,,,,,
+CONSUMO TOTAL DIARIO,,,23845,Wh/día,,
+CONSUMO REAL AJUSTADO,,,23722,Wh/día,,
+CONSUMO DIARIO (kWh),,,23.72,kWh/día,,
+,,,,,,
+DIMENSIONAMIENTO DEL SISTEMA,,,,,,
+Descripción,,,Valor,Unidad,Notas,
+,,,,,,
+1. BANCO DE BATERÍAS,,,,,,
+Consumo diario,,,23722,Wh,,
+Días de autonomía,,,1,días,,
+Profundidad de descarga máxima,,,50,%,Baterías de ciclo profundo
+Voltaje del sistema,,,48,V DC,,
+Eficiencia del inversor,,,90,%,,
+,,,,,,
+Capacidad requerida (Ah),,,1096,Ah,=Consumo/(Voltaje*Prof.Desc*Efic.)
+Capacidad recomendada (Ah),,,1200,Ah,Valor comercial más cercano
+Configuración sugerida,,,4 baterías 12V 300Ah en serie,,o similar
+,,,,,,
+2. INVERSOR,,,,,,
+Potencia máxima simultánea,,,8670,W,Suma equipos críticos simultáneos
+Factor de seguridad,,,1.25,,,
+Potencia inversor recomendada,,,10838,W,,
+Potencia comercial sugerida,,,12000,W,Inversor/Cargador híbrido 48V
+,,,,,,
+3. PANELES SOLARES,,,,,,
+Consumo diario,,,23.72,kWh,,
+Horas sol pico promedio,,,5,horas,Ajustar según ubicación
+Pérdidas del sistema,,,25,%,Cables suciedad temperatura
+Factor de pérdidas,,,1.33,,,
+,,,,,,
+Capacidad FV requerida,,,6316,Wp,,
+Potencia comercial sugerida,,,6500-7000,Wp,,
+Ejemplo configuración:,,,16 paneles de 400W,,=6400Wp
+,,,,,,
+4. CONTROLADOR DE CARGA,,,,,,
+Corriente paneles (Isc),,,55,A,Aprox. para 6.4kWp / 48V
+Factor de seguridad,,,1.25,,,
+Controlador recomendado,,,70-80,A,MPPT 48V
+,,,,,,
+EQUIPOS DE MAYOR CONSUMO,,,,,,
+Equipo,,,Consumo (Wh/día),% del total,,
+Split (Aire acondicionado),,,6720,28.3%,,
+Refrigerador + Nevera,,,2592,10.9%,,
+Cocina eléctrica,,,2800,11.8%,,
+Cocina de inducción,,,2400,10.1%,,
+Ducha eléctrica,,,2250,9.5%,,
+Ventiladores,,,1920,8.1%,,
+Horno de aire,,,1500,6.3%,,
+Otros,,,3540,14.9%,,
+,,,,,,
+RECOMENDACIONES,,,,,,
+1. El aire acondicionado (split) representa el 28% del consumo. Considere uso eficiente,,,,,,
+2. La ducha eléctrica consume mucha energía. Considere calentador solar como alternativo,,,,,,
+3. Evite uso simultáneo de cocina eléctrica cocina inducción y ducha eléctrica,,,,,,
+4. El refrigerador y nevera funcionan 24h. Considere modelos eficientes (Inverter),,,,,,
+5. Para reducir costos considere generador de respaldo para cargas grandes,,,,,,
+6. Instale el sistema FV orientado al sur (hemisferio norte) con inclinación óptima,,,,,,
+7. Sistema híbrido permite inyección a red si hay excedente (verificar normativa local),,,,,,
+,,,,,,
+PRESUPUESTO ESTIMADO (USD),,,,,,
+Componente,Cantidad,,Precio Unit.,Total,,
+Paneles solares 400W,16,,250,4000,,
+Inversor híbrido 12kW 48V,1,,2500,2500,,
+Baterías 12V 300Ah ciclo prof.,4,,800,3200,,
+Controlador MPPT 80A 48V,1,,600,600,,
+Estructura y montaje,1,,800,800,,
+Cables protecciones y acc.,1,,500,500,,
+Instalación y puesta en marcha,1,,1200,1200,,
+,,,,,,
+TOTAL ESTIMADO,,,12800,USD,,
+,,,,,,
+Notas: Los precios son referenciales y varían según ubicación marca y proveedor,,,,,,
+Este es un sistema de alta capacidad debido a las cargas eléctricas significativas,,,,,,
