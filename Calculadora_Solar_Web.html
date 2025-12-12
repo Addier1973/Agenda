@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Solar - Sistema Fotovoltaico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            padding: 10px 5px;
+            text-align: center;
+            font-size: 12px;
+        }
+        td {
+            padding: 8px 5px;
+            border: 1px solid #ddd;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .total-row {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        .result-section {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .result-section h2 {
+            color: #1ea34f;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #c8e6c9;
+        }
+        .result-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .result-value {
+            color: #1ea34f;
+            font-weight: bold;
+        }
+        .params-section {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .params-section h3 {
+            color: #f57c00;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .param-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .param-input {
+            width: 80px;
+            padding: 5px;
+            border: 2px solid #f57c00;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .components-section {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .components-section h2 {
+            color: #1976d2;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .component-item {
+            background: white;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border-left: 4px solid #1976d2;
+        }
+        .btn-calculate {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #21d97c 0%, #1ea34f 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        .btn-calculate:active {
+            transform: scale(0.98);
+        }
+        .readonly {
+            background: #f5f5f5;
+            text-align: right;
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            th, td {
+                font-size: 11px;
+                padding: 5px 3px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Calculadora Solar Interactiva</h1>
+        <p class="subtitle">Sistema Fotovoltaico Híbrido 48V | 110V Monofásico</p>
+        
+        <div class="alert">
+            📱 <strong>Edite los valores</strong> en azul y los cálculos se actualizan automáticamente
+        </div>
+
+        <table id="equiposTable">
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>EQUIPO</th>
+                    <th>CANT.</th>
+                    <th>POT.(W)</th>
+                    <th>H/DÍA</th>
+                    <th>CONSUMO<br>(Wh)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Cocina eléctrica</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="2000" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1.5" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">2100.00</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Olla multipropósito</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1000" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">800.00</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Cocina inducción</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1800" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">1260.00</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Refrigerador</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="150" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="24" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">1440.00</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Nevera</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="120" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="24" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">1152.00</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>Horno de aire</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1500" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="0.5" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">600.00</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Batidora</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="300" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="0.3" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">90.00</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>Microondas</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1200" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="0.5" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">480.00</td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td>Lavadora semiautomática</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="400" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">320.00</td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td>Ducha eléctrica</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="4500" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="0.5" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">2250.00</td>
+                </tr>
+                <tr>
+                    <td>11</td>
+                    <td>Televisor 55"</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="120" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="6" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">720.00</td>
+                </tr>
+                <tr>
+                    <td>12</td>
+                    <td>Ventiladores</td>
+                    <td><input type="number" value="4" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="60" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="8" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">1920.00</td>
+                </tr>
+                <tr>
+                    <td>13</td>
+                    <td>Lámparas LED</td>
+                    <td><input type="number" value="15" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="10" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="5" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">750.00</td>
+                </tr>
+                <tr>
+                    <td>14</td>
+                    <td>Split (A/C)</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="1200" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="6" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">5040.00</td>
+                </tr>
+                <tr>
+                    <td>15</td>
+                    <td>Cargadores teléfonos</td>
+                    <td><input type="number" value="2" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="10" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="3" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">60.00</td>
+                </tr>
+                <tr>
+                    <td>16</td>
+                    <td>Cargador motosierra</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="80" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="2" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">160.00</td>
+                </tr>
+                <tr>
+                    <td>17</td>
+                    <td>Radio</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="15" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="4" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">60.00</td>
+                </tr>
+                <tr>
+                    <td>18</td>
+                    <td>Teatro casa 5.1</td>
+                    <td><input type="number" value="1" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="150" min="0" onchange="calcular()"></td>
+                    <td><input type="number" value="3" min="0" step="0.1" onchange="calcular()"></td>
+                    <td class="readonly consumo">450.00</td>
+                </tr>
+                <tr class="total-row">
+                    <td colspan="5"><strong>TOTAL CONSUMO DIARIO</strong></td>
+                    <td id="totalConsumo" style="text-align: right;"><strong>19652.00</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="params-section">
+            <h3>⚙️ Parámetros del Sistema</h3>
+            <div class="param-item">
+                <span>Voltaje del sistema (V):</span>
+                <input type="number" id="voltaje" class="param-input" value="48" onchange="calcular()">
+            </div>
+            <div class="param-item">
+                <span>Días de autonomía:</span>
+                <input type="number" id="diasAuto" class="param-input" value="1" min="1" onchange="calcular()">
+            </div>
+            <div class="param-item">
+                <span>Profundidad descarga (0-1):</span>
+                <input type="number" id="profDesc" class="param-input" value="0.5" step="0.05" min="0.3" max="0.8" onchange="calcular()">
+            </div>
+            <div class="param-item">
+                <span>Eficiencia inversor (0-1):</span>
+                <input type="number" id="eficInv" class="param-input" value="0.9" step="0.05" min="0.7" max="0.95" onchange="calcular()">
+            </div>
+            <div class="param-item">
+                <span>Horas Sol Pico (HSP):</span>
+                <input type="number" id="hsp" class="param-input" value="5" step="0.5" min="3" max="7" onchange="calcular()">
+            </div>
+            <div class="param-item">
+                <span>Factor pérdidas (0-1):</span>
+                <input type="number" id="factorPerd" class="param-input" value="0.75" step="0.05" min="0.6" max="0.9" onchange="calcular()">
+            </div>
+        </div>
+
+        <div class="result-section">
+            <h2>📊 Resultados del Dimensionamiento</h2>
+            <div class="result-item">
+                <span class="result-label">Consumo diario:</span>
+                <span class="result-value" id="resConsumo">19.65 kWh/día</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Capacidad banco (Wh):</span>
+                <span class="result-value" id="resCapWh">39,304 Wh</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Capacidad banco (Ah):</span>
+                <span class="result-value" id="resCapAh">819 Ah @ 48V</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Potencia paneles FV:</span>
+                <span class="result-value" id="resPotPaneles">5,817 Wp</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Potencia recomendada:</span>
+                <span class="result-value" id="resPotRecom">6,981 Wp</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Cantidad paneles 400W:</span>
+                <span class="result-value" id="resCantPaneles">18 paneles</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Potencia inversor:</span>
+                <span class="result-value" id="resPotInv">5,625 W</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Corriente controlador:</span>
+                <span class="result-value" id="resCorrControl">150 A</span>
+            </div>
+        </div>
+
+        <div class="components-section">
+            <h2>🔧 Componentes Necesarios</h2>
+            <div class="component-item">
+                <strong>Paneles Solares:</strong><br>
+                <span id="compPaneles">18 paneles de 400Wp (7.0 kWp total)</span>
+            </div>
+            <div class="component-item">
+                <strong>Inversor Híbrido:</strong><br>
+                <span id="compInversor">6 kW @ 48V (debe soportar pico de 5625W)</span>
+            </div>
+            <div class="component-item">
+                <strong>Banco de Baterías:</strong><br>
+                <span id="compBaterias">819 Ah @ 48V (8 baterías 12V 200Ah en serie-paralelo)</span>
+            </div>
+            <div class="component-item">
+                <strong>Controlador de Carga:</strong><br>
+                <span id="compControlador">150A MPPT para 48V</span>
+            </div>
+            <div class="component-item">
+                <strong>Inversión Estimada:</strong><br>
+                💰 <strong>$9,700 - $15,500 USD</strong> (según calidad componentes)
+            </div>
+        </div>
+
+        <div class="alert" style="background: #e3f2fd; border-left-color: #2196f3;">
+            <strong>💡 Recomendaciones:</strong><br>
+            • Ducha eléctrica es el mayor consumidor (2.25 kWh/día) - considere alternativas<br>
+            • Split (A/C) consume 5.04 kWh/día - use con moderación<br>
+            • HSP en Rep. Dominicana: 4.5-5.5 horas<br>
+            • Baterías litio duran 10-15 años vs plomo 3-5 años
+        </div>
+    </div>
+
+    <script>
+        // Factores de uso por equipo (índice basado en fila)
+        const factoresUso = [0.7, 0.8, 0.7, 0.4, 0.4, 0.8, 1.0, 0.8, 0.8, 1.0, 1.0, 1.0, 1.0, 0.7, 1.0, 1.0, 1.0, 1.0];
+
+        function calcular() {
+            const rows = document.querySelectorAll('#equiposTable tbody tr:not(.total-row)');
+            let totalConsumo = 0;
+            let maxPotencia = 0;
+
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input');
+                const cantidad = parseFloat(inputs[0].value) || 0;
+                const potencia = parseFloat(inputs[1].value) || 0;
+                const horas = parseFloat(inputs[2].value) || 0;
+                const factorUso = factoresUso[index] || 1.0;
+                
+                const consumo = cantidad * potencia * horas * factorUso;
+                row.querySelector('.consumo').textContent = consumo.toFixed(2);
+                totalConsumo += consumo;
+                
+                if (potencia > maxPotencia) maxPotencia = potencia;
+            });
+
+            document.getElementById('totalConsumo').textContent = totalConsumo.toFixed(2);
+
+            // Parámetros
+            const voltaje = parseFloat(document.getElementById('voltaje').value) || 48;
+            const diasAuto = parseFloat(document.getElementById('diasAuto').value) || 1;
+            const profDesc = parseFloat(document.getElementById('profDesc').value) || 0.5;
+            const eficInv = parseFloat(document.getElementById('eficInv').value) || 0.9;
+            const hsp = parseFloat(document.getElementById('hsp').value) || 5;
+            const factorPerd = parseFloat(document.getElementById('factorPerd').value) || 0.75;
+
+            // Cálculos
+            const consumoAjustado = totalConsumo / eficInv;
+            const capBancoWh = (totalConsumo * diasAuto) / profDesc;
+            const capBancoAh = capBancoWh / voltaje;
+            const potPaneles = consumoAjustado / hsp / factorPerd;
+            const potRecom = potPaneles * 1.2;
+            const cantPaneles = Math.ceil(potRecom / 400);
+            const potInv = maxPotencia * 1.25;
+            const corrControl = (potRecom / voltaje) * 1.25;
+
+            // Actualizar resultados
+            document.getElementById('resConsumo').textContent = (totalConsumo / 1000).toFixed(2) + ' kWh/día';
+            document.getElementById('resCapWh').textContent = capBancoWh.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' Wh';
+            document.getElementById('resCapAh').textContent = Math.round(capBancoAh) + ' Ah @ ' + voltaje + 'V';
+            document.getElementById('resPotPaneles').textContent = potPaneles.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' Wp';
+            document.getElementById('resPotRecom').textContent = potRecom.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' Wp';
+            document.getElementById('resCantPaneles').textContent = cantPaneles + ' paneles';
+            document.getElementById('resPotInv').textContent = potInv.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' W';
+            document.getElementById('resCorrControl').textContent = Math.round(corrControl) + ' A';
+
+            // Componentes
+            document.getElementById('compPaneles').textContent = cantPaneles + ' paneles de 400Wp (' + (cantPaneles * 0.4).toFixed(1) + ' kWp total)';
+            document.getElementById('compInversor').textContent = Math.ceil(potInv/1000) + ' kW @ ' + voltaje + 'V (debe soportar pico de ' + Math.round(potInv) + 'W)';
+            document.getElementById('compBaterias').textContent = Math.round(capBancoAh) + ' Ah @ ' + voltaje + 'V (aprox. ' + Math.ceil(capBancoAh/200) + ' baterías 12V 200Ah)';
+            document.getElementById('compControlador').textContent = Math.round(corrControl) + 'A MPPT para ' + voltaje + 'V';
+        }
+
+        // Calcular al cargar
+        calcular();
+    </script>
+</body>
+</html>
