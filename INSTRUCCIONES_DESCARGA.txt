@@ -1,0 +1,45 @@
+═══════════════════════════════════════════════════════════════
+  CÓMO ACCEDER A LOS ARCHIVOS DESDE SU CELULAR
+═══════════════════════════════════════════════════════════════
+
+UBICACIÓN DE LOS ARCHIVOS:
+- Ruta completa: /workspace/Calculadora_Autoconsumo_Solar.xlsx
+- En el proyecto: Calculadora_Autoconsumo_Solar.xlsx (raíz)
+
+═══════════════════════════════════════════════════════════════
+MÉTODO 1: USAR GIT PARA SUBIR Y DESCARGAR
+═══════════════════════════════════════════════════════════════
+
+Si tiene acceso a Git desde la app:
+1. Los archivos están en el workspace
+2. Puede hacer commit y push para subirlos
+3. Luego descargarlos desde GitHub en su navegador
+
+═══════════════════════════════════════════════════════════════
+MÉTODO 2: COPIAR RUTA DEL ARCHIVO
+═══════════════════════════════════════════════════════════════
+
+Ruta completa del archivo:
+/workspace/Calculadora_Autoconsumo_Solar.xlsx
+
+Use esta ruta para:
+- Buscar el archivo en el explorador de archivos del sistema
+- Compartir usando aplicaciones de administración de archivos
+- Acceder mediante terminal si está disponible
+
+═══════════════════════════════════════════════════════════════
+MÉTODO 3: ABRIR DIRECTAMENTE CON OTRA APP
+═══════════════════════════════════════════════════════════════
+
+1. Busque el archivo en el explorador
+2. Toque "Abrir con..."
+3. Seleccione: Google Sheets, Excel, WPS Office, Drive
+4. Una vez abierto, guárdelo en la app que eligió
+
+═══════════════════════════════════════════════════════════════
+ARCHIVOS DISPONIBLES:
+═══════════════════════════════════════════════════════════════
+
+1. Calculadora_Autoconsumo_Solar.xlsx (8.8 KB) - PRINCIPAL
+2. Calculo_Autoconsumo_Fotovoltaico.csv (5.2 KB) - Alternativa
+3. DESCARGAR_AQUI.html (4.7 KB) - Página web
