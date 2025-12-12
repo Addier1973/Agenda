@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargar Calculadora Solar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .download-btn {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.2s;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        .download-btn.excel {
+            background: linear-gradient(135deg, #21d97c 0%, #1ea34f 100%);
+            box-shadow: 0 4px 15px rgba(33, 217, 124, 0.4);
+        }
+        .download-btn.csv {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+        }
+        .icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .info {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .info strong {
+            color: #667eea;
+        }
+        .step {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Calculadora Solar</h1>
+        <p class="subtitle">Sistema Fotovoltaico Híbrido 48V</p>
+        
+        <a href="Calculadora_Autoconsumo_Solar.xlsx" download class="download-btn excel">
+            <span class="icon">📊</span>
+            DESCARGAR EXCEL
+            <div style="font-size: 12px; margin-top: 5px;">Con fórmulas automáticas</div>
+        </a>
+        
+        <a href="Calculo_Autoconsumo_Fotovoltaico.csv" download class="download-btn csv">
+            <span class="icon">📄</span>
+            DESCARGAR CSV
+            <div style="font-size: 12px; margin-top: 5px;">Texto plano (backup)</div>
+        </a>
+
+        <div class="info">
+            <strong>✅ Características del Excel:</strong>
+            <div class="step">🔸 Edite valores en celdas AMARILLAS</div>
+            <div class="step">🔸 Cálculos automáticos en tiempo real</div>
+            <div class="step">🔸 18 equipos pre-configurados</div>
+            <div class="step">🔸 Dimensionamiento completo del sistema</div>
+            <div class="step">🔸 Resumen de componentes necesarios</div>
+        </div>
+
+        <div class="alert">
+            <strong>📱 Instrucciones:</strong><br>
+            1. Toque el botón DESCARGAR EXCEL<br>
+            2. El archivo se guardará en Descargas<br>
+            3. Ábralo con Excel, Google Sheets o WPS Office<br>
+            4. Edite las celdas amarillas según su necesidad
+        </div>
+
+        <div class="info" style="margin-top: 15px; background: #e8f5e9;">
+            <strong>📊 Datos incluidos:</strong><br>
+            • Consumo diario: <strong>19.65 kWh/día</strong><br>
+            • Paneles necesarios: <strong>17-18 de 400Wp</strong><br>
+            • Inversor: <strong>6 kW @ 48V</strong><br>
+            • Baterías: <strong>819 Ah @ 48V</strong><br>
+            • Inversión: <strong>$9,700 - $15,500 USD</strong>
+        </div>
+    </div>
+</body>
+</html>
