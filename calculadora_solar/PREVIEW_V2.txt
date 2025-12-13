@@ -1,0 +1,143 @@
+═══════════════════════════════════════════════════════════════════════════════
+                  CALCULADORA DE AUTOCONSUMO SOLAR V2 - PREVIEW
+═══════════════════════════════════════════════════════════════════════════════
+
+📁 ARCHIVO: Calculadora_Solar_V2_Completa.xlsx
+📍 UBICACIÓN: /workspace/calculadora_solar/
+📊 TAMAÑO: 11 KB
+✅ ESTADO: Creado y listo para usar
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCIÓN 1: TABLA DE EQUIPOS (igual que antes)
+═══════════════════════════════════════════════════════════════════════════════
+
+[Mismos 18 equipos con consumos editables]
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCIÓN 2: PARÁMETROS DEL SISTEMA ⭐ NUEVO
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────┬──────────┬─────────┬────────────────────────┐
+│ PARÁMETRO                       │ VALOR    │ UNIDAD  │ DESCRIPCIÓN            │
+├─────────────────────────────────┼──────────┼─────────┼────────────────────────┤
+│ Voltaje del sistema             │ 48       │ V       │ Sistema 48V            │
+│ Días de autonomía               │ 1        │ días    │ Reserva del banco      │
+│ Tipo de batería        🟡       │ Litio    │         │ Plomo/AGM/Gel/Litio    │
+│ Profundidad descarga   🟡       │ 0.8      │         │ 80% para Litio         │
+│ Eficiencia inversor    🟡       │ 0.9      │         │ 90% típica             │
+│ Horas Sol Pico (HSP)   🟡       │ 5        │ horas   │ RD: 4.5-5.5            │
+│ Factor pérdidas        🟡       │ 0.75     │         │ 75% útil               │
+└─────────────────────────────────┴──────────┴─────────┴────────────────────────┘
+
+🟡 = CELDAS AMARILLAS EDITABLES
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCIÓN 3: DIMENSIONAMIENTO (cálculos automáticos - igual)
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCIÓN 4: TABLA DE COSTOS ⭐ COMPLETAMENTE NUEVO
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────┬──────────┬──────────────┬────────────┬──────────────────────┐
+│ COMPONENTE                     │ CANTIDAD │ PRECIO UNIT. │ SUBTOTAL   │ NOTAS                │
+├────────────────────────────────┼──────────┼──────────────┼────────────┼──────────────────────┤
+│ Paneles Solares 400W           │ 18       │ $175.00 🟡   │ $3,150.00  │ Monocristalinos      │
+│ Inversor Híbrido 6kW           │ 1        │ $1,500.00 🟡 │ $1,500.00  │ 48V con MPPT         │
+│ Baterías 200Ah (según tipo)    │ 4        │ $550.00 🟡   │ $2,200.00  │ Ajustar según tipo   │
+│ Estructura montaje paneles     │ 18       │ $15.00 🟡    │ $270.00    │ Aluminio             │
+│ Cable solar DC 10AWG           │ 1        │ $300.00 🟡   │ $300.00    │ 50m + conectores     │
+│ Cable AC entrada/salida        │ 1        │ $200.00 🟡   │ $200.00    │ Cable THW            │
+│ Breakers y fusibles DC         │ 1        │ $150.00 🟡   │ $150.00    │ Protección paneles   │
+│ Breakers AC                    │ 1        │ $100.00 🟡   │ $100.00    │ Protección AC        │
+│ Tablero distribución           │ 1        │ $150.00 🟡   │ $150.00    │ Con breakers         │
+│ Sistema puesta a tierra        │ 1        │ $100.00 🟡   │ $100.00    │ Varillas + cable     │
+│ Canaletas y ductos             │ 1        │ $120.00 🟡   │ $120.00    │ PVC protección       │
+│ Materiales menores             │ 1        │ $180.00 🟡   │ $180.00    │ Conectores varios    │
+├────────────────────────────────┴──────────┴──────────────┼────────────┼──────────────────────┤
+│ SUBTOTAL MATERIALES Y COMPONENTES                        │ $8,320.00  │                      │
+├───────────────────────────────────────────────────────────┼────────────┼──────────────────────┤
+│ MANO DE OBRA INSTALACIÓN                        🟡       │ $2,500.00  │ Diseño + instalación │
+├───────────────────────────────────────────────────────────┼────────────┼──────────────────────┤
+│ 💵 INVERSIÓN TOTAL DEL SISTEMA                           │ $10,820.00 │ CÁLCULO AUTOMÁTICO   │
+└───────────────────────────────────────────────────────────┴────────────┴──────────────────────┘
+
+🟡 = PRECIOS EDITABLES - Cambie según su proveedor
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCIÓN 5: TABLA DE REFERENCIA DE BATERÍAS ⭐ NUEVO
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────┬───────────┬───────────┬──────────────┬─────────────────────────────┐
+│ TIPO            │ PROF.DESC.│ VIDA ÚTIL │ PRECIO/200Ah │ VENTAJAS/DESVENTAJAS        │
+├─────────────────┼───────────┼───────────┼──────────────┼─────────────────────────────┤
+│ Plomo-ácido     │ 50%       │ 3-5 años  │ $350-450     │ Bajo costo / Pesadas        │
+│ AGM             │ 60%       │ 5-7 años  │ $500-650     │ Sin mant. / Más caras       │
+│ Gel             │ 70%       │ 8-10 años │ $600-750     │ Duraderas / Sensibles       │
+│ Litio (LiFePO4) │ 80-90%    │ 10-15 años│ $800-1000    │ Eficientes / Inversión alta │
+└─────────────────┴───────────┴───────────┴──────────────┴─────────────────────────────┘
+
+💡 NOTA: Ajuste el precio unitario de baterías según el tipo seleccionado
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCIÓN 6: INSTRUCCIONES DE USO ⭐ NUEVO
+═══════════════════════════════════════════════════════════════════════════════
+
+1️⃣ EQUIPOS: Edite Cantidad, Potencia (W), Horas/día y Factor de uso (amarillo)
+2️⃣ TIPO DE BATERÍA: Escriba Plomo-ácido, AGM, Gel o Litio (amarillo)
+3️⃣ PROFUNDIDAD: Ajuste según tipo - Plomo:0.5 | AGM:0.6 | Gel:0.7 | Litio:0.8
+4️⃣ COSTOS: Actualice precios según sus proveedores (celdas amarillas)
+5️⃣ MANO DE OBRA: Ajuste según complejidad y ubicación
+6️⃣ HSP: Para RD use 4.5-5.5 horas
+7️⃣ Los cálculos se actualizan AUTOMÁTICAMENTE
+
+═══════════════════════════════════════════════════════════════════════════════
+RESUMEN DE CAMBIOS V2
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ AGREGADO: Sección completa de COSTOS (12 componentes editables)
+✅ AGREGADO: Campo "Tipo de batería" editable
+✅ AGREGADO: Campo "Profundidad de descarga" editable  
+✅ AGREGADO: Tabla de referencia de tipos de baterías
+✅ AGREGADO: Mano de obra editable ($2,500 default)
+✅ AGREGADO: Cálculo automático de inversión total
+✅ AGREGADO: Instrucciones detalladas de uso
+✅ MEJORADO: Documentación y notas explicativas
+
+═══════════════════════════════════════════════════════════════════════════════
+DIFERENCIAS CON LA VERSIÓN ANTERIOR
+═══════════════════════════════════════════════════════════════════════════════
+
+VERSIÓN 1 (Calculadora_Autoconsumo_Solar.xlsx):
+- Solo tabla de equipos
+- Solo dimensionamiento técnico
+- NO incluye costos
+- NO incluye tipos de baterías
+- 8.8 KB
+
+VERSIÓN 2 (Calculadora_Solar_V2_Completa.xlsx): ⭐ NUEVO
+- Tabla de equipos
+- Dimensionamiento técnico
+- ✅ TABLA DE COSTOS COMPLETA (12 items)
+- ✅ SELECTOR TIPO DE BATERÍAS
+- ✅ PROFUNDIDAD DESCARGA AJUSTABLE
+- ✅ MANO DE OBRA EDITABLE
+- ✅ TABLA DE REFERENCIA BATERÍAS
+- ✅ INVERSIÓN TOTAL CALCULADA
+- 11 KB
+
+═══════════════════════════════════════════════════════════════════════════════
+UBICACIÓN DEL ARCHIVO
+═══════════════════════════════════════════════════════════════════════════════
+
+📂 Ruta: /workspace/calculadora_solar/Calculadora_Solar_V2_Completa.xlsx
+📊 Tamaño: 11,264 bytes (11 KB)
+📅 Creado: Dic 13, 2024 - 04:54 AM
+✅ Estado: Listo para usar
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Para ver este archivo:
+1. Busque en el explorador de archivos de Cursor: calculadora_solar/
+2. Abra: Calculadora_Solar_V2_Completa.xlsx
+3. Compare con la versión anterior (Calculadora_Autoconsumo_Solar.xlsx)
