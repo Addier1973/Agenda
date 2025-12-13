@@ -1,0 +1,267 @@
+================================================================================
+CALCULADORA SOLAR V5 - METODOLOGÍA PROFESIONAL
+================================================================================
+
+🎯 OBJETIVO: Diseño profesional de sistemas fotovoltaicos con TODOS los 
+parámetros técnicos necesarios según estándares NEC, IEC e internacionales.
+
+================================================================================
+✨ NOVEDADES DE LA VERSIÓN 5
+================================================================================
+
+1. ☀️ ESPECIFICACIONES COMPLETAS DEL PANEL SOLAR
+   ✅ Ahora incluye:
+      • Voc (Voltaje circuito abierto) - CRÍTICO
+      • Isc (Corriente cortocircuito) - CRÍTICO
+      • Coeficiente de temperatura Voc (%/°C)
+      • Coeficiente de temperatura Isc (%/°C)
+      • Coeficiente de temperatura Pmax (%/°C)
+   
+   ⚠️ Estos parámetros se encuentran en la hoja técnica del fabricante
+
+2. 🔌 ESPECIFICACIONES COMPLETAS DEL INVERSOR
+   ✅ Ahora incluye:
+      • Voltaje MPPT mínimo
+      • Voltaje MPPT máximo
+      • Voltaje DC máximo absoluto (NO EXCEDER)
+      • Corriente DC máxima por MPPT
+      • Número de MPPT
+      • Frecuencia (50/60 Hz)
+   
+   ⚠️ Estos parámetros se encuentran en la hoja técnica del inversor
+
+3. 🌡️ DATOS AMBIENTALES DEL SITIO
+   ✅ Ahora incluye:
+      • Temperatura mínima histórica (para cálculo Voc máximo)
+      • Temperatura máxima promedio (para cálculo corrientes)
+      • Temperatura de operación de célula (NOCT)
+      • HSP promedio anual
+      • HSP mes crítico
+      • Factor de pérdidas del sistema
+
+4. ⚡ CORRECCIONES POR TEMPERATURA (AUTOMÁTICAS)
+   ✅ La calculadora ahora realiza automáticamente:
+      • Voc corregido a temperatura mínima
+      • Vmp corregido a temperatura de operación
+      • Isc corregido a temperatura máxima
+   
+   📐 Fórmulas según estándar:
+      Voc_min = Voc_STC × [1 + (Coef_Voc/100) × (Tmin - 25)]
+      Vmp_op = Vmp_STC × [1 + (Coef_Pmax/100) × (Top - 25)]
+      Isc_max = Isc_STC × [1 + (Coef_Isc/100) × (Tmax - 25)]
+
+5. ⚙️ DISEÑO DE STRINGS FLEXIBLE
+   ✅ CAMPOS TOTALMENTE EDITABLES:
+      • Paneles por string (serie)
+      • Voltaje del string (V)
+      • Corriente del string (A)
+      • Potencia del string (W)
+   
+   ⚠️ El usuario PUEDE Y DEBE ingresar estos valores manualmente
+      según el modelo específico del inversor y el diseño.
+
+6. ⚠️ VALIDACIONES DE SEGURIDAD (NEC 690)
+   ✅ La calculadora valida automáticamente:
+      • Voc string × 1.25 < Vmax inversor (NEC 690.7)
+      • Isc string × 1.25 < Imax inversor (NEC 690.8)
+      • Potencia arreglo ≤ Pinv × 1.2 (Sobredimensión permitida)
+      • Voltaje batería = Voltaje inversor (Compatibilidad)
+   
+   📊 Resultado visual: ✅ OK o ❌ FALLA
+
+================================================================================
+📊 ESTRUCTURA DE LA CALCULADORA V5
+================================================================================
+
+HOJA 1: CALCULADORA (Principal)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ Sección 1: ☀️ Especificaciones del Panel Solar
+│            8 parámetros técnicos (TODOS EDITABLES)
+│
+│ Sección 2: 🔌 Especificaciones del Inversor
+│            9 parámetros técnicos (TODOS EDITABLES)
+│
+│ Sección 3: 🌡️ Datos Ambientales del Sitio
+│            6 parámetros climáticos (TODOS EDITABLES)
+│
+│ Sección 4: ⚡ Correcciones por Temperatura
+│            3 cálculos automáticos según temperatura
+│
+│ Sección 5: 💡 Cálculo de Consumo Eléctrico
+│            Lista de equipos con potencia y horas de uso
+│            Consumo total diario calculado
+│
+│ Sección 6: 🔋 Dimensionamiento de Baterías
+│            Tipo de batería (dropdown)
+│            Profundidad de descarga automática según tipo
+│            Capacidad requerida (Ah) calculada
+│
+│ Sección 7: ☀️ Dimensionamiento del Arreglo Fotovoltaico
+│            • Potencia FV requerida (calculada)
+│            • Paneles necesarios teóricos (calculados)
+│            • DISEÑO DE STRING (EDITABLE por usuario):
+│              - Paneles por string (serie)
+│              - Número de strings (paralelo)
+│              - Paneles totales a instalar
+│            • PARÁMETROS DEL STRING (EDITABLES):
+│              - Voltaje del string (V)
+│              - Corriente del string (A)
+│              - Potencia del string (W)
+│              - Potencia total del arreglo
+│
+│ Sección 8: ⚠️ Validaciones de Seguridad (NEC 690)
+│            4 validaciones automáticas con resultado visual
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HOJA 2: LISTA DE MATERIALES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ • Desglose completo de materiales por categoría
+│ • Cantidades calculadas automáticamente
+│ • Precios unitarios editables
+│ • Subtotales por categoría
+│ • Costo de mano de obra editable
+│ • INVERSIÓN TOTAL DEL PROYECTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HOJA 3: INFORME CLIENTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ • Resumen ejecutivo para el cliente
+│ • Especificaciones del sistema
+│ • Generación eléctrica estimada
+│ • Inversión del proyecto
+│ • Formato listo para exportar a PDF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+================================================================================
+🎨 IDENTIFICACIÓN VISUAL DE CAMPOS
+================================================================================
+
+🟨 FONDO AMARILLO = CAMPO EDITABLE
+   → Puedes y DEBES modificar estos valores según tus datos
+
+🟩 FONDO VERDE = RESULTADO CALCULADO
+   → Se actualiza automáticamente según valores editables
+
+🔴 TEXTO ROJO = ADVERTENCIA IMPORTANTE
+   → Indica parámetros críticos o que requieren atención
+
+✅ VERDE + Checkmark = Validación OK
+❌ ROJO + X = Validación FALLIDA
+
+================================================================================
+📖 CÓMO USAR LA CALCULADORA V5
+================================================================================
+
+PASO 1: DATOS DEL PANEL SOLAR
+   • Consulta la hoja técnica del panel que vas a utilizar
+   • Ingresa TODOS los parámetros (Pmax, Vmp, Imp, Voc, Isc, coeficientes)
+   • ⚠️ Los coeficientes de temperatura son CRÍTICOS
+
+PASO 2: DATOS DEL INVERSOR
+   • Consulta la hoja técnica del inversor
+   • Ingresa rangos MPPT, voltajes máximos, corrientes
+   • ⚠️ El voltaje DC máximo NO DEBE EXCEDERSE
+
+PASO 3: DATOS AMBIENTALES
+   • Consulta atlas solar de tu región para HSP
+   • Ingresa temperaturas mínima y máxima históricas
+   • Factor de pérdidas típico: 0.80 (puedes ajustarlo)
+
+PASO 4: CONSUMOS
+   • Ingresa todos los equipos eléctricos
+   • Especifica potencia (W) y horas de uso diario
+   • La calculadora sumará el consumo total
+
+PASO 5: BATERÍAS
+   • Selecciona tipo de batería (dropdown)
+   • La profundidad de descarga se ajusta automáticamente
+   • Ajusta días de autonomía según necesidad
+
+PASO 6: DISEÑO DE STRINGS ⚠️ IMPORTANTE
+   • La calculadora te dará el número TEÓRICO de paneles
+   • TÚ DEBES DECIDIR la configuración de strings:
+     - ¿Cuántos paneles en serie por string?
+     - ¿Cuántos strings en paralelo?
+   • INGRESA MANUALMENTE:
+     - Voltaje del string según tu diseño
+     - Corriente del string según tu diseño
+     - Potencia del string según tu diseño
+
+PASO 7: VALIDACIONES
+   • Revisa la sección de validaciones de seguridad
+   • Si ves ❌ FALLA, ajusta tu diseño de strings
+   • TODAS las validaciones deben estar en ✅ OK
+
+PASO 8: LISTA DE MATERIALES Y PRESUPUESTO
+   • Revisa la hoja "Lista de Materiales"
+   • Ajusta precios unitarios según tu mercado
+   • Ingresa costo de mano de obra
+   • Obtén inversión total del proyecto
+
+PASO 9: INFORME CLIENTE
+   • Revisa la hoja "Informe Cliente"
+   • Exporta a PDF para presentar al cliente
+
+================================================================================
+🔍 DIFERENCIAS V5 vs V4.1
+================================================================================
+
+V4.1                              →  V5 PROFESIONAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Panel: Solo Pmax, Vmp, Imp       →  + Voc, Isc, Coeficientes temp
+Inversor: Potencia AC            →  + Rangos MPPT, corrientes, voltajes
+Sin datos ambientales            →  Temperaturas, HSP, factor pérdidas
+Sin correcciones temperatura     →  Correcciones automáticas Voc/Vmp/Isc
+Strings calculados               →  Strings EDITABLES por usuario
+Sin validaciones                 →  4 validaciones NEC automáticas
+Sin metodología clara            →  Metodología profesional completa
+
+================================================================================
+⚠️ ADVERTENCIAS IMPORTANTES
+================================================================================
+
+1. Los parámetros de STRING (voltaje, corriente, potencia) SON EDITABLES
+   porque dependen del modelo específico de inversor y la configuración
+   de los paneles. NO confíes en cálculos automáticos para esto.
+
+2. Las correcciones por temperatura SON CRÍTICAS para seguridad.
+   NO omitas los coeficientes de temperatura del panel.
+
+3. Las validaciones NEC SON OBLIGATORIAS para cumplir con normativa.
+   Si alguna validación falla (❌), DEBES ajustar el diseño.
+
+4. El factor de pérdidas del sistema (típico 0.80) considera:
+   - Pérdidas por cableado
+   - Pérdidas por suciedad
+   - Pérdidas por temperatura
+   - Pérdidas por sombras
+   - Pérdidas del inversor
+
+5. La profundidad de descarga (DoD) varía según tipo de batería:
+   - Plomo-ácido: 50% (vida útil limitada si se excede)
+   - AGM: 70% (mejor rendimiento)
+   - Gel: 60% (buena durabilidad)
+   - Litio: 90% (mayor eficiencia y vida útil)
+
+================================================================================
+📚 REFERENCIAS
+================================================================================
+
+• NEC (National Electrical Code) Artículo 690 - Sistemas Fotovoltaicos
+• IEC 61215 - Cualificación del diseño de módulos fotovoltaicos
+• IEC 61730 - Seguridad de módulos fotovoltaicos
+• IEEE 1547 - Interconexión de recursos energéticos distribuidos
+
+================================================================================
+💡 SOPORTE
+================================================================================
+
+Para consultas sobre:
+• Interpretación de resultados
+• Ajuste de parámetros
+• Validaciones de seguridad
+• Dimensionamiento específico
+
+Consulta con un ingeniero electricista certificado en sistemas fotovoltaicos.
+
+================================================================================

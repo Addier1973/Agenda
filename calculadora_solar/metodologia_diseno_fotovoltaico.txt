@@ -1,0 +1,150 @@
+==============================================================================
+METODOLOGÍA PROFESIONAL DE DISEÑO DE SISTEMAS FOTOVOLTAICOS
+Basada en NEC, IEC y estándares internacionales
+==============================================================================
+
+1. PARÁMETROS DEL MÓDULO SOLAR (De hoja técnica del fabricante)
+   ================================================================
+   Condiciones Estándar de Prueba (STC: 1000W/m², 25°C, AM1.5)
+   
+   a) Eléctricos STC:
+      - Pmax (W): Potencia máxima nominal
+      - Vmp (V): Voltaje a potencia máxima
+      - Imp (A): Corriente a potencia máxima
+      - Voc (V): Voltaje circuito abierto ⚠️ CRÍTICO
+      - Isc (A): Corriente cortocircuito ⚠️ CRÍTICO
+   
+   b) Coeficientes de temperatura:
+      - Coef. temp. Voc (%/°C): Típico -0.28% a -0.35%/°C
+      - Coef. temp. Isc (%/°C): Típico +0.04% a +0.06%/°C
+      - Coef. temp. Pmax (%/°C): Típico -0.37% a -0.45%/°C
+   
+   c) Tolerancias:
+      - Tolerancia potencia (%): Típico ±3% o 0/-5W
+
+2. PARÁMETROS DEL INVERSOR (De hoja técnica del fabricante)
+   ===============================================================
+   
+   a) Entrada DC (MPPT):
+      - Voltaje MPPT mínimo (V): Inicio tracking
+      - Voltaje MPPT máximo (V): Fin tracking
+      - Voltaje DC máximo absoluto (V): ⚠️ NO EXCEDER
+      - Corriente DC máxima por MPPT (A)
+      - Número de MPPT: Entradas independientes
+      - Strings por MPPT: Máximo permitido
+   
+   b) Salida AC:
+      - Potencia nominal AC (W)
+      - Voltaje nominal AC (V)
+      - Frecuencia (Hz)
+      - Tipo: Monofásico/Bifásico/Trifásico
+   
+   c) Sistema híbrido (si aplica):
+      - Voltaje batería nominal (V): 12/24/48/96V
+      - Corriente carga máxima (A)
+      - Corriente descarga máxima (A)
+
+3. DATOS AMBIENTALES DEL SITIO
+   ===============================
+   
+   a) Temperatura:
+      - Temp. mínima histórica (°C): Para cálculo Voc máximo
+      - Temp. máxima promedio (°C): Para cálculo corrientes
+      - Temp. célula diseño (NOCT): Típico 45-47°C
+   
+   b) Irradiación:
+      - HSP promedio anual (h): Horas Sol Pico
+      - HSP mes crítico (h): Peor mes del año
+      - Irradiancia diseño (W/m²): Típico 1000 W/m²
+   
+   c) Ubicación:
+      - Latitud/Longitud
+      - Altitud (msnm): Afecta temperatura
+      - Obstáculos/sombras
+
+4. CÁLCULO DE CORRECCIONES POR TEMPERATURA
+   ==========================================
+   
+   ⚠️ FUNDAMENTAL PARA SEGURIDAD Y CUMPLIMIENTO DE NORMAS
+   
+   a) Voc corregido a temperatura mínima:
+      Voc_min = Voc_STC × [1 + (Coef_Voc/100) × (Tmin - 25)]
+      
+      REGLA: Voc_min × Paneles_serie < Vmax_inversor
+   
+   b) Vmp corregido a temperatura operación:
+      Vmp_op = Vmp_STC × [1 + (Coef_Pmax/100) × (Top - 25)]
+      
+      REGLA: Vmp_op × Paneles_serie > Vmin_MPPT_inversor
+   
+   c) Isc corregido a alta temperatura:
+      Isc_max = Isc_STC × [1 + (Coef_Isc/100) × (Tmax - 25)]
+      
+      REGLA: Isc_max × Paneles_paralelo < Imax_MPPT
+
+5. DIMENSIONAMIENTO DE STRING
+   ============================
+   
+   ⚠️ NO SE "CALCULA", SE "DISEÑA" SEGÚN RESTRICCIONES
+   
+   a) Paneles en SERIE (determina voltaje):
+      Min_serie = ROUNDUP(Vmin_MPPT / Vmp_op)
+      Max_serie = ROUNDDOWN(Vmax_inversor / Voc_min)
+      
+      Seleccionar: Entre Min_serie y Max_serie
+   
+   b) Strings en PARALELO (determina corriente):
+      Max_paralelo = ROUNDDOWN(Imax_MPPT / Isc_max)
+      
+      Verifica: Strings_paralelo ≤ Max_paralelo
+   
+   c) Parámetros del string resultante:
+      Vstring = Vmp × Paneles_serie
+      Istring = Imp × Strings_paralelo
+      Pstring = Pmax × Paneles_serie × Strings_paralelo
+
+6. DIMENSIONAMIENTO DE BATERÍAS (Sistema híbrido)
+   ================================================
+   
+   a) Capacidad requerida:
+      Cap_Ah = (Consumo_diario_Wh × Días_autonomía) / (Vbat × DoD × Eficiencia)
+      
+      Donde:
+      - Consumo_diario_Wh: Energía diaria total
+      - Días_autonomía: Típico 1-3 días
+      - Vbat: Voltaje sistema (12/24/48/96V)
+      - DoD: Profundidad descarga (0.5-0.8 según tipo)
+      - Eficiencia: Típico 0.85-0.95
+   
+   b) Profundidad de descarga según tipo:
+      - Plomo-ácido abierto: DoD = 0.50 (50%)
+      - AGM: DoD = 0.60-0.70 (60-70%)
+      - Gel: DoD = 0.60 (60%)
+      - Litio (LiFePO4): DoD = 0.80-0.90 (80-90%)
+   
+   c) Configuración:
+      - Baterías en serie: Para alcanzar Vsistema
+      - Baterías en paralelo: Para alcanzar capacidad
+
+7. FACTOR DE SEGURIDAD Y PÉRDIDAS
+   =================================
+   
+   - Pérdidas cableado DC: 1-3%
+   - Pérdidas cableado AC: 1-2%
+   - Pérdidas por suciedad: 2-5%
+   - Pérdidas temperatura: 5-15%
+   - Pérdidas sombras: 0-10%
+   - Pérdidas inversor: 3-5%
+   - Degradación anual: 0.5-0.7%/año
+   
+   FACTOR GLOBAL: 0.75-0.85 (típico 0.80)
+
+8. VALIDACIONES DE SEGURIDAD
+   ===========================
+   
+   ✅ Voc_string × 1.25 < Vmax_inversor (Factor NEC 690.7)
+   ✅ Isc_string × 1.25 < Imax_MPPT (Factor NEC 690.8)
+   ✅ Parray ≤ Pmax_inversor × 1.2 (Sobredimensión permitida)
+   ✅ Vsistema_bat = Vbat_inversor
+   ✅ Calibre cable: I × 1.25 × Factor_temp
+
