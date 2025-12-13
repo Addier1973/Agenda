@@ -1,295 +1,348 @@
-# 📊 CALCULADORA DE AUTOCONSUMO SOLAR - VERSIÓN COMPLETA
+# 📊 CALCULADORA SOLAR V3 - TOTALMENTE PERSONALIZABLE
 
-## Sistema Fotovoltaico Híbrido 48V | 110V Monofásico
+## Sistema Fotovoltaico Configurable - Cualquier Voltaje/Frecuencia/Tipo
 
-**Email de contacto:** apolivera1973@gmail.com  
-**Fecha:** Diciembre 2024  
-**Versión:** 2.0 - Completa con Costos y Tipos de Baterías
+**Email:** apolivera1973@gmail.com  
+**Versión:** 3.0 - Totalmente Personalizable  
+**Fecha:** Diciembre 2024
+
+---
+
+## 🆕 VERSIÓN 3.0 - NUEVAS CARACTERÍSTICAS
+
+### ⚡ **TOTALMENTE CONFIGURABLE:**
+
+| Parámetro | Opciones | Descripción |
+|-----------|----------|-------------|
+| **Voltaje del Sistema** | 12V / 24V / 48V / 96V | Ajustable según necesidad |
+| **Frecuencia** | 50Hz / 60Hz | Según su país/región |
+| **Tipo de Red** | Monofásico / Fase dividida / Trifásico | Editable libremente |
+| **Tipo Inversor** | On-Grid / Off-Grid / Híbrido | Seleccionable |
+| **Potencia Panel** | Cualquier valor (W) | 250W, 330W, 400W, 500W, etc. |
+| **Cantidad Paneles** | Auto-calculado | Se ajusta según potencia elegida |
+
+### 🔄 **CÁLCULOS DINÁMICOS:**
+- ✅ Cambie la potencia del panel → La cantidad se recalcula automáticamente
+- ✅ Cambie el voltaje → Amperaje de baterías se ajusta
+- ✅ Cambie el tipo de red → Especificaciones se actualizan
+- ✅ Todo interconectado y actualizado en tiempo real
 
 ---
 
 ## 📥 ARCHIVOS DISPONIBLES:
 
-### ⭐ **Calculadora_Solar_V2_Completa.xlsx** - VERSIÓN MEJORADA (RECOMENDADO)
-**NUEVAS CARACTERÍSTICAS:**
-- ✅ **Selector de tipo de baterías** (Plomo-ácido, AGM, Gel, Litio)
-- ✅ **Profundidad de descarga ajustable** según tipo de batería
-- ✅ **Tabla detallada de costos** de todos los componentes
-- ✅ **Mano de obra de instalación** (editable)
-- ✅ **Tabla de referencia** con ventajas/desventajas de cada tipo de batería
-- ✅ **Precios unitarios editables** para personalizar según su proveedor
-- ✅ **Cálculo automático** de inversión total
+### ⭐ **Calculadora_Solar_V3_Personalizable.xlsx** - ÚLTIMA VERSIÓN
+**CONFIGURACIÓN COMPLETA DEL SISTEMA:**
+- ⚙️ **Voltaje ajustable:** 12V, 24V, 48V o 96V
+- 🔌 **Frecuencia seleccionable:** 50Hz o 60Hz
+- 🏭 **Tipo de red editable:** Monofásico, Fase dividida o Trifásico
+- ☀️ **Potencia panel personalizable:** Cualquier valor en Watts
+- 📊 **Cálculos dinámicos:** Todo se recalcula automáticamente
+- 💰 **Presupuesto detallado:** Con especificaciones dinámicas
+- 📚 **Tablas de referencia:** Voltajes y tipos de baterías
 
-### 1️⃣ **Calculadora_Autoconsumo_Solar.xlsx** - Versión Básica
-- Archivo Excel con fórmulas automáticas
-- 18 equipos pre-configurados
-- Dimensionamiento básico del sistema
+### 2️⃣ **Calculadora_Solar_V2_Completa.xlsx**
+- Selector de tipo de baterías
+- Tabla completa de costos
+- Mano de obra editable
 
-### 2️⃣ **Calculadora_Solar_Web.html** 🌐 INTERACTIVO
-- Calculadora web que funciona en el navegador
-- No requiere Excel ni Google Sheets
-- Edite valores y vea resultados en tiempo real
-- Optimizada para móviles
+### 3️⃣ **Calculadora_Autoconsumo_Solar.xlsx**
+- Versión básica original
+- Dimensionamiento simple
 
-### 3️⃣ **Calculo_Autoconsumo_Fotovoltaico.csv** 📄 RESPALDO
-- Formato CSV (texto plano)
-- Compatible con cualquier aplicación
-
-### 4️⃣ **TABLA_PARA_COPIAR.txt** 📋 PARA COPIAR/PEGAR
-- Texto plano con toda la información
-- Cópielo y péguelo en Google Sheets
+### 4️⃣ **Calculadora_Solar_Web.html**
+- Calculadora interactiva web
+- Funciona en navegador
 
 ---
 
-## 🆕 NOVEDADES VERSIÓN 2.0:
+## 🎯 CASOS DE USO V3:
 
-### 🔋 **TIPOS DE BATERÍAS DISPONIBLES:**
+### **Sistema Pequeño (12V):**
+```
+Voltaje: 12V
+Frecuencia: 60Hz
+Tipo red: 110V Monofásico
+Potencia panel: 250W
+→ Ideal para: Cabañas, autocaravanas, sistemas portátiles
+```
 
-| Tipo | Profundidad Descarga | Vida Útil | Precio/200Ah | Mejor Para |
-|------|---------------------|-----------|--------------|------------|
-| **Plomo-ácido** | 50% | 3-5 años | $350-450 | Presupuesto limitado |
-| **AGM** | 60% | 5-7 años | $500-650 | Sin mantenimiento |
-| **Gel** | 70% | 8-10 años | $600-750 | Larga durabilidad |
-| **Litio (LiFePO4)** | 80-90% | 10-15 años | $800-1000 | Máximo rendimiento |
+### **Sistema Residencial Estándar (48V):**
+```
+Voltaje: 48V
+Frecuencia: 60Hz
+Tipo red: 110V Monofásico
+Potencia panel: 400W
+→ Ideal para: Casas, consumo medio-alto
+```
 
-### 💰 **DESGLOSE COMPLETO DE COSTOS:**
-
-**Materiales y Componentes:**
-- Paneles solares (18 × 400W)
-- Inversor híbrido 6kW 48V
-- Baterías según tipo seleccionado
-- Estructura de montaje
-- Cableado DC y AC
-- Breakers y protecciones
-- Tablero de distribución
-- Sistema puesta a tierra
-- Materiales varios
-
-**Mano de Obra:**
-- Diseño eléctrico
-- Instalación completa
-- Pruebas y puesta en marcha
-- **Costo editable:** $2,500 USD (por defecto)
-
-**Inversión Total Estimada:** $12,000 - $16,000 USD (según tipo de batería)
+### **Sistema Trifásico Industrial (96V):**
+```
+Voltaje: 96V
+Frecuencia: 50Hz
+Tipo red: 380V Trifásico
+Potencia panel: 500W
+→ Ideal para: Negocios, industrias, grandes consumos
+```
 
 ---
 
-## 📊 RESUMEN DE RESULTADOS:
+## 📋 GUÍA DE USO V3:
 
-| Parámetro | Valor |
-|-----------|-------|
-| **Consumo diario total** | 19.65 kWh/día (19,652 Wh) |
-| **Paneles solares necesarios** | 18 paneles de 400Wp (7.2 kWp) |
-| **Inversor híbrido** | 6 kW @ 48V |
-| **Banco de baterías** | 819 Ah @ 48V |
-| **Controlador MPPT** | 150A para 48V |
-| **Con baterías Plomo** | $12,200 USD aprox. |
-| **Con baterías Litio** | $15,800 USD aprox. |
+### **Paso 1: Configuración del Sistema**
 
----
+**Edite las celdas amarillas en la sección "CONFIGURACIÓN DEL SISTEMA":**
 
-## 🎯 CÓMO USAR LA CALCULADORA V2:
+1. **Voltaje del sistema:**
+   - Escriba: `12`, `24`, `48` o `96`
+   - Impacta: Cálculo de Ah de baterías, corriente del controlador
 
-### Paso 1: Editar Equipos
-- Modifique **Cantidad**, **Potencia (W)**, **Horas/día** en celdas amarillas
-- Ajuste el **Factor de uso** (0.4 para ciclos on/off, 1.0 para uso continuo)
+2. **Frecuencia:**
+   - Escriba: `50` o `60`
+   - Depende de su país (RD: 60Hz, Europa: 50Hz)
 
-### Paso 2: Seleccionar Tipo de Batería
-- En la celda amarilla, escriba: **Plomo-ácido**, **AGM**, **Gel** o **Litio**
-- Ajuste la **Profundidad de descarga** según el tipo:
-  - Plomo-ácido: **0.5** (50%)
-  - AGM: **0.6** (60%)
-  - Gel: **0.7** (70%)
-  - Litio: **0.8-0.9** (80-90%)
+3. **Tipo de red:**
+   - Escriba ejemplos:
+     - `110V Monofásico`
+     - `220V Fase dividida`
+     - `220V/380V Trifásico`
+   - Aparece en especificaciones del inversor
 
-### Paso 3: Ajustar Parámetros
-- **HSP:** Para República Dominicana use **4.5-5.5** horas
-- **Días de autonomía:** Por defecto **1 día** (puede aumentar)
-- **Eficiencia inversor:** **0.9** (90%) típica
+4. **Tipo de inversor:**
+   - Opciones: `On-Grid`, `Off-Grid`, `Híbrido`
 
-### Paso 4: Actualizar Precios
-En la tabla de costos, edite los **precios unitarios** (celdas amarillas):
-- Paneles: $175/unidad (promedio)
-- Inversor: $1,500 (puede variar)
-- Baterías: Ajuste según tipo seleccionado
-- Otros componentes según su proveedor
+### **Paso 2: Parámetros de Paneles**
 
-### Paso 5: Ajustar Mano de Obra
-- Precio por defecto: **$2,500 USD**
-- Incluye: diseño, instalación, pruebas
-- Ajuste según complejidad y ubicación
+**En la sección "PARÁMETROS DE BATERÍAS Y GENERACIÓN":**
 
-### Paso 6: Ver Resultados
+5. **Potencia panel solar:**
+   - Escriba cualquier valor: `250`, `330`, `400`, `450`, `500`, etc.
+   - La **cantidad de paneles** se recalcula automáticamente
+   - Ejemplo: Si su panel es de 500W, ponga `500`
+
+### **Paso 3: Resto de Parámetros**
+
+6. Configure:
+   - Días de autonomía
+   - Tipo de batería
+   - Profundidad de descarga
+   - HSP según su ubicación
+
+### **Paso 4: Ver Resultados**
+
 ✅ **Todo se calcula automáticamente:**
-- Consumo total
-- Componentes necesarios
-- Inversión total del sistema
+- Cantidad exacta de paneles según potencia elegida
+- Capacidad de baterías en Ah según voltaje
+- Corriente del controlador ajustada
+- Presupuesto con especificaciones dinámicas
 
 ---
 
-## ⚡ EQUIPOS INCLUIDOS:
+## 💡 EJEMPLOS PRÁCTICOS:
 
-1. Cocina eléctrica (2000W) - 10.7% del consumo
-2. Olla multipropósito (1000W)
-3. Cocina de inducción (1800W) - 6.4%
-4. Refrigerador (150W) - 7.3%
-5. Nevera (120W) - 5.9%
-6. Horno de aire (1500W)
-7. Batidora (300W)
-8. Microondas (1200W)
-9. Lavadora semiautomática (400W)
-10. **Ducha eléctrica (4500W) - 11.4%** ⚠️
-11. Televisor 55" (120W)
-12. 4 Ventiladores (60W c/u) - 9.8%
-13. 15 Lámparas LED (10W c/u)
-14. **Split / A/C (1200W) - 25.6%** ⚠️
-15. 2 Cargadores de teléfonos (10W c/u)
-16. Cargador de motosierra (80W)
-17. Radio (15W)
-18. Teatro en casa 5.1 (150W)
+### **Ejemplo 1: Sistema con Paneles de 500W**
 
----
-
-## 💡 RECOMENDACIONES CLAVE:
-
-### 🔴 MAYORES CONSUMIDORES:
-
-**1. Aire Acondicionado (25.6%)**
-- Usar SOLO en horas de sol (10am-4pm)
-- Considerar equipo inverter (ahorra 30-50%)
-- Alternativa: ventiladores (consumen 90% menos)
-
-**2. Ducha Eléctrica (11.4%)**
-- **RECOMENDACIÓN:** Calentador solar térmico o de gas
-- **Ahorro:** 2,250 Wh/día = Reducir sistema en 11.4%
-- **ROI:** Inversión se recupera en 1-2 años
-
-**3. Refrigeración (13.2%)**
-- Mantener en buen estado (sellos, limpieza)
-- Ubicar en lugar ventilado
-- No abrir innecesariamente
-
-### 🟡 SELECCIÓN DE BATERÍAS:
-
-**Litio (Recomendado para largo plazo):**
-- ✅ Inversión inicial: +$3,000 USD vs Plomo
-- ✅ Vida útil: 10-15 años vs 3-5 años
-- ✅ Profundidad descarga: 80-90% vs 50%
-- ✅ Sin mantenimiento
-- ✅ Menor tamaño y peso
-- ✅ **Costo/año:** Más económico a largo plazo
-
-**Plomo-ácido (Para presupuesto limitado):**
-- ✅ Inversión inicial menor
-- ❌ Reemplazo cada 3-5 años
-- ❌ Requiere mantenimiento
-- ❌ Solo 50% de descarga útil
-- ❌ **Costo/año:** Más caro a largo plazo
-
-### 🟢 OPTIMIZACIÓN:
-
-- Usar lavadora entre 10am-3pm (horas de sol)
-- Cargar dispositivos durante el día
-- Programar A/C con temporizador
-- Priorizar LED sobre incandescentes
-- Instalar medidor de energía
-
----
-
-## 💰 COMPARATIVA DE INVERSIÓN:
-
-### Opción 1: Sistema con Baterías Plomo-ácido
 ```
-Materiales:           $9,700
-Mano de obra:         $2,500
-TOTAL:               $12,200
-Reemplazo baterías:   ~$3,600 cada 4 años
-Costo 12 años:       ~$22,000
+CONFIGURACIÓN:
+- Potencia panel: 500W
+- Potencia recomendada: 6,981 Wp (del cálculo)
+- Cantidad paneles: 14 paneles (6981/500 = 13.96 ≈ 14)
+
+RESULTADO:
+En lugar de 18 paneles de 400W, necesita solo 14 de 500W
 ```
 
-### Opción 2: Sistema con Baterías Litio
+### **Ejemplo 2: Sistema 24V Monofásico**
+
 ```
-Materiales:          $13,200
-Mano de obra:         $2,500
-TOTAL:               $15,700
-Reemplazo baterías:   $0 (duran 12+ años)
-Costo 12 años:       ~$15,700
+CONFIGURACIÓN:
+- Voltaje: 24V
+- Tipo red: 110V Monofásico
+- Consumo: 19,652 Wh/día
+- Capacidad banco: 39,304 Wh
+
+RESULTADO:
+- Capacidad baterías: 1,638 Ah @ 24V (en lugar de 819 Ah @ 48V)
+- Corriente controlador: 290 A @ 24V
 ```
 
-**💡 Ahorro con Litio: $6,300 USD en 12 años**
+### **Ejemplo 3: Sistema Trifásico Industrial**
+
+```
+CONFIGURACIÓN:
+- Voltaje: 96V
+- Frecuencia: 50Hz
+- Tipo red: 380V Trifásico
+- Potencia panel: 550W
+
+RESULTADO:
+- Capacidad baterías: 409 Ah @ 96V
+- Corriente controlador: 72 A @ 96V
+- Inversor: Especificado para 380V Trifásico
+```
 
 ---
 
-## 📱 CÓMO DESCARGAR:
+## 📊 TABLA DE REFERENCIA - VOLTAJES:
 
-### Desde GitHub (su celular):
-1. Navegue a: https://github.com/Addier1973/Agenda
-2. Seleccione rama: `cursor/calculate-autoconsumption-table-f50d`
-3. Entre a carpeta: `calculadora_solar/`
-4. Toque: `Calculadora_Solar_V2_Completa.xlsx`
-5. Presione botón **"Download"** o los 3 puntos (⋮)
-
-### Desde Computadora:
-1. Clone el repositorio
-2. Navegue a `/calculadora_solar/`
-3. Abra el archivo Excel
-4. Edite y guarde sus cambios
+| Voltaje | Aplicación Típica | Consumo | Ventajas |
+|---------|-------------------|---------|----------|
+| **12V** | Autocaravanas, barcos | <500W | Económico, simple |
+| **24V** | Cabañas, sistemas pequeños | 500-2,000W | Balance costo/eficiencia |
+| **48V** | Casas residenciales | 2,000-10,000W | Eficiente, menor corriente |
+| **96V** | Industrial, comercial | >10,000W | Máxima eficiencia |
 
 ---
 
-## 🔧 COMPONENTES DEL SISTEMA:
+## 🔄 COMPARATIVA DE VERSIONES:
 
-### Paneles Solares:
-- **18 paneles de 400Wp** (7,200 Wp total)
-- Monocristalinos alta eficiencia
-- Orientación: Sur (hemisferio norte)
-- Inclinación: 18-20° (óptima para RD)
-
-### Inversor Híbrido:
-- **6 kW @ 48V**
-- Con controlador MPPT integrado
-- Soporta pico de 5,625W
-- Eficiencia: 90%
-
-### Banco de Baterías:
-- **819 Ah @ 48V** (según cálculo)
-- Configuración: Serie-paralelo
-- Cantidad: ~4 baterías de 200Ah (según tipo)
-- Autonomía: 1 día (ajustable)
-
-### Estructura y Protecciones:
-- Estructura aluminio resistente
-- Cable solar 10 AWG certificado
-- Breakers DC y AC
-- Sistema puesta a tierra completo
+| Característica | V1 | V2 | V3 ⭐ |
+|----------------|----|----|-------|
+| Tabla de equipos | ✅ | ✅ | ✅ |
+| Dimensionamiento | ✅ | ✅ | ✅ |
+| Tabla de costos | ❌ | ✅ | ✅ |
+| Tipos de baterías | ❌ | ✅ | ✅ |
+| Mano de obra | ❌ | ✅ | ✅ |
+| **Voltaje ajustable** | ❌ | ❌ | ✅ |
+| **Frecuencia editable** | ❌ | ❌ | ✅ |
+| **Tipo red configurable** | ❌ | ❌ | ✅ |
+| **Potencia panel variable** | ❌ | ❌ | ✅ |
+| **Cálculo dinámico paneles** | ❌ | ❌ | ✅ |
+| Tabla ref. voltajes | ❌ | ❌ | ✅ |
 
 ---
 
-## 📞 CONTACTO:
+## 🎨 ESTRUCTURA DEL ARCHIVO V3:
+
+```
+┌──────────────────────────────────────────────┐
+│  1. TABLA DE EQUIPOS                         │
+│     - 18 equipos editables                   │
+│     - Consumo total calculado                │
+├──────────────────────────────────────────────┤
+│  2. ⚙️ CONFIGURACIÓN DEL SISTEMA (NUEVO)     │
+│     - Voltaje del sistema (editable)         │
+│     - Frecuencia (editable)                  │
+│     - Tipo de red (editable)                 │
+│     - Tipo de inversor (editable)            │
+├──────────────────────────────────────────────┤
+│  3. 🔋 PARÁMETROS BATERÍAS Y GENERACIÓN      │
+│     - Días autonomía                         │
+│     - Tipo batería                           │
+│     - Profundidad descarga                   │
+│     - HSP                                    │
+│     - Potencia panel (editable) ⭐           │
+├──────────────────────────────────────────────┤
+│  4. 📊 DIMENSIONAMIENTO AUTOMÁTICO           │
+│     - Consumo diario                         │
+│     - Capacidad banco (Wh y Ah)              │
+│     - Potencia paneles                       │
+│     - Cantidad paneles (dinámico) ⭐         │
+│     - Potencia inversor                      │
+│     - Corriente controlador                  │
+├──────────────────────────────────────────────┤
+│  5. 💰 PRESUPUESTO DETALLADO                 │
+│     - 12 componentes con precios             │
+│     - Especificaciones dinámicas ⭐          │
+│     - Mano de obra                           │
+│     - Inversión total                        │
+├──────────────────────────────────────────────┤
+│  6. ⚡ TABLA REFERENCIA VOLTAJES (NUEVO)     │
+│     - Aplicaciones por voltaje               │
+│     - Ventajas de cada sistema               │
+├──────────────────────────────────────────────┤
+│  7. 🔋 TABLA REFERENCIA BATERÍAS             │
+│     - Tipos con características              │
+│     - Precios y vida útil                    │
+├──────────────────────────────────────────────┤
+│  8. 📝 INSTRUCCIONES V3                      │
+│     - Guía de nuevas funciones               │
+└──────────────────────────────────────────────┘
+```
+
+---
+
+## 📥 DESCARGA DIRECTA V3:
+
+### Desde GitHub:
+```
+https://github.com/Addier1973/Agenda/raw/cursor/calculate-autoconsumption-table-f50d/calculadora_solar/Calculadora_Solar_V3_Personalizable.xlsx
+```
+
+### Desde navegador:
+1. Vaya a: https://github.com/Addier1973/Agenda
+2. Rama: `cursor/calculate-autoconsumption-table-f50d`
+3. Carpeta: `calculadora_solar/`
+4. Archivo: `Calculadora_Solar_V3_Personalizable.xlsx`
+
+---
+
+## ✅ VENTAJAS DE LA V3:
+
+1. ✨ **Flexibilidad Total:** Configure cualquier tipo de sistema
+2. 🔄 **Cálculos Dinámicos:** Todo se ajusta automáticamente
+3. 🌍 **Universal:** Para cualquier país y configuración
+4. 💰 **Presupuesto Preciso:** Con especificaciones correctas
+5. 📊 **Tablas de Referencia:** Para tomar decisiones informadas
+6. 🎯 **Casos de Uso:** Desde 12V portátil hasta 96V industrial
+
+---
+
+## 🛠️ CASOS DE USO ESPECÍFICOS:
+
+### **República Dominicana (Su caso):**
+```
+Voltaje: 48V
+Frecuencia: 60Hz
+Tipo red: 110V Monofásico
+Potencia panel: 400W
+→ Perfecto para red eléctrica dominicana
+```
+
+### **Europa:**
+```
+Voltaje: 48V
+Frecuencia: 50Hz
+Tipo red: 230V Monofásico
+Potencia panel: 450W
+→ Adaptado a red europea
+```
+
+### **Sistemas Off-Grid:**
+```
+Voltaje: 24V o 48V
+Frecuencia: 60Hz
+Tipo red: Independiente
+Potencia panel: 330W-450W
+→ Sin conexión a red
+```
+
+---
+
+## 📞 SOPORTE:
 
 **Email:** apolivera1973@gmail.com
 
-Para consultas sobre:
-- Ajustes en el dimensionamiento
-- Selección de componentes
-- Recomendaciones de proveedores
-- Instalación y configuración
-- Optimización del sistema
-- Análisis financiero
+**Consultas sobre:**
+- Configuración de sistemas específicos
+- Selección de voltaje apropiado
+- Dimensionamiento personalizado
+- Compatibilidad de componentes
+- Instalación y puesta en marcha
 
 ---
 
-## 📄 VERSIONES:
+## 🔖 HISTORIAL DE VERSIONES:
 
-| Versión | Fecha | Cambios |
-|---------|-------|---------|
-| **2.0** | Dic 2024 | ✅ Tipos de baterías, costos completos, mano de obra |
+| Versión | Fecha | Cambios Principales |
+|---------|-------|---------------------|
+| **3.0** | Dic 2024 | ⭐ Voltaje/Frecuencia/Red ajustables, Potencia panel variable |
+| 2.0 | Dic 2024 | Tipos de baterías, tabla costos, mano de obra |
 | 1.0 | Dic 2024 | Calculadora básica con dimensionamiento |
 
 ---
 
-**Creado:** Diciembre 2024  
-**Sistema:** 110V Monofásico | Híbrido 48V 60Hz  
-**Ubicación:** República Dominicana  
-**Licencia:** Uso personal para apolivera1973@gmail.com
+**Sistema:** Configurable - Cualquier voltaje/frecuencia  
+**Potencias:** 12V / 24V / 48V / 96V  
+**Redes:** Monofásico / Fase dividida / Trifásico  
+**Licencia:** Uso personal - apolivera1973@gmail.com
