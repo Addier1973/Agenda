@@ -245,11 +245,16 @@
 
     window.removeClient = async (id) => {
         if (!confirm('Eliminar cliente y todas sus órdenes, facturas?')) return;
-        await deleteClient(id);
         const acts = await getActivities();
-        for (const a of acts.filter(item => item.clientId === id)) await deleteActivity(a.id);
+        for (const a of acts.filter(item => item.clientId === id)) {
+            for (const mat of (a.materiales || [])) {
+                await actualizarStock(Number(mat.productoId), Number(mat.cantidad) || 0, 'Devolución por eliminación de cliente', a.id);
+            }
+            await deleteActivity(a.id);
+        }
         const facts = await getFacturas();
         for (const f of facts.filter(item => item.clientId === id)) await deleteFactura(f.id);
+        await deleteClient(id);
         await refreshAll();
     };
 
@@ -266,7 +271,7 @@
         currentMovimientos = await getMovimientos();
         const container = document.getElementById('productosListContainer');
         if (container) {
-            container.innerHTML = currentProductos.map(p => `<div class="border p-3 rounded flex justify-between items-center"><div><span class="font-bold">${escapeHtml(p.nombre)}</span> - Stock: ${p.stock} - Precio: $${p.precio?.toFixed(2) || 0}</div><div><button onclick="editProducto(${p.id})" class="text-blue-500 mr-2"><i class="fas fa-edit"></i></button><button onclick="deleteProducto(${p.id})" class="text-red-500"><i class="fas fa-trash"></i></button></div></div>`).join('') || '<p class="text-gray-400">No hay productos</p>';
+            container.innerHTML = currentProductos.map(p => `<div class="border p-3 rounded flex justify-between items-center"><div><span class="font-bold">${escapeHtml(p.nombre)}</span> - Stock: ${Number(p.stock) || 0} - Precio: $${(Number(p.precio) || 0).toFixed(2)}</div><div><button onclick="editProducto(${p.id})" class="text-blue-500 mr-2"><i class="fas fa-edit"></i></button><button onclick="deleteProducto(${p.id})" class="text-red-500"><i class="fas fa-trash"></i></button></div></div>`).join('') || '<p class="text-gray-400">No hay productos</p>';
         }
         const movContainer = document.getElementById('movimientosListContainer');
         if (movContainer) movContainer.innerHTML = currentMovimientos.slice(-20).reverse().map(m => `<div class="border-b py-1">${m.fecha} - ${m.tipo}: ${escapeHtml(m.productoNombre)} (${m.cantidad}) - Stock final: ${m.stockFinal}</div>`).join('');
@@ -292,6 +297,7 @@
     async function actualizarStock(productoId, cantidad, motivo, actividadId = null) {
         const prod = currentProductos.find(p => p.id === productoId) || (await getProductos()).find(p => p.id === productoId);
         if (!prod) return false;
+        if (!Number.isFinite(cantidad) || cantidad === 0) return true;
         if (prod.stock + cantidad < 0) { alert(`Stock insuficiente para ${prod.nombre}`); return false; }
         prod.stock += cantidad;
         await saveProducto(prod);
@@ -573,18 +579,29 @@
 
     async function viewActaInicio(actId) {
         const act = currentActivities.find(a => a.id === actId);
+        if (!act) { alert('Orden no encontrada'); return; }
         const client = currentClients.find(c => c.id === act.clientId);
-        const materialesHtml = (act.materiales || []).map(m => `<li>${m.nombreProducto} x${m.cantidad} = $${(m.cantidad * m.precioUnitario).toFixed(2)}</li>`).join('');
-        const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE INICIO / ORDEN DE SERVICIO</h2><p><strong>Cliente:</strong> ${client?.name} - ${client?.address || ''}</p><p><strong>Fecha inicio:</strong> ${act.startDate}</p><p><strong>Descripción:</strong> ${escapeHtml(act.description)}</p><p><strong>Mano de obra total:</strong> $${act.total}</p><p><strong>Materiales:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><div class="mt-6">_________________________<br>Firma responsable</div></div>`;
+        const manoObra = Number(act.total) || 0;
+        const materialesHtml = (act.materiales || []).map(m => {
+            const cantidad = Number(m.cantidad) || 0;
+            const precioUnitario = Number(m.precioUnitario) || 0;
+            return `<li>${m.nombreProducto} x${cantidad} = $${(cantidad * precioUnitario).toFixed(2)}</li>`;
+        }).join('');
+        const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE INICIO / ORDEN DE SERVICIO</h2><p><strong>Cliente:</strong> ${client?.name} - ${client?.address || ''}</p><p><strong>Fecha inicio:</strong> ${act.startDate}</p><p><strong>Descripción:</strong> ${escapeHtml(act.description)}</p><p><strong>Mano de obra total:</strong> $${manoObra.toFixed(2)}</p><p><strong>Materiales:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><div class="mt-6">_________________________<br>Firma responsable</div></div>`;
         showActaModal(html);
     }
 
     async function viewActaFin(actId) {
         const act = currentActivities.find(a => a.id === actId);
+        if (!act) { alert('Orden no encontrada'); return; }
         if (!act.completed) { alert('No finalizada'); return; }
         const client = currentClients.find(c => c.id === act.clientId);
         const signatureImg = act.completionSignature ? `<img src="${act.completionSignature}" style="max-width:200px;">` : '<p>Sin firma</p>';
-        const materialesHtml = (act.materiales || []).map(m => `<li>${m.nombreProducto} x${m.cantidad} = $${(m.cantidad * m.precioUnitario).toFixed(2)}</li>`).join('');
+        const materialesHtml = (act.materiales || []).map(m => {
+            const cantidad = Number(m.cantidad) || 0;
+            const precioUnitario = Number(m.precioUnitario) || 0;
+            return `<li>${m.nombreProducto} x${cantidad} = $${(cantidad * precioUnitario).toFixed(2)}</li>`;
+        }).join('');
         const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE FIN Y ACEPTACIÓN</h2><p><strong>Cliente:</strong> ${client?.name}</p><p><strong>Orden:</strong> ${escapeHtml(act.description)}</p><p><strong>Fecha cierre:</strong> ${act.completionDate}</p><p><strong>Materiales utilizados:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><p><strong>Firma del cliente:</strong><br>${signatureImg}</p><div class="mt-4">El cliente acepta la finalización.</div></div>`;
         showActaModal(html);
     }
@@ -700,7 +717,10 @@
         const clients = await getClients();
         container.innerHTML = currentFacturas.map(f => {
             const client = clients.find(c => c.id === f.clientId);
-            return `<div class="border rounded-lg p-4 shadow-sm flex justify-between items-center"><div><p class="font-bold">${f.numero}</p><p class="text-sm">Fecha: ${f.fecha} | Cliente: ${client?.name || 'N/A'}</p><p class="text-sm">Base: $${f.base} | IVA ${f.ivaPorcentaje}% | Total: $${f.total}</p></div><div><button onclick="verFacturaPDF(${f.id})" class="bg-blue-600 text-white px-3 py-1 rounded text-sm"><i class="fas fa-file-pdf"></i> PDF</button> <button onclick="eliminarFactura(${f.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm"><i class="fas fa-trash"></i></button></div></div>`;
+            const base = Number(f.base) || 0;
+            const iva = Number(f.ivaPorcentaje) || 0;
+            const total = Number(f.total) || 0;
+            return `<div class="border rounded-lg p-4 shadow-sm flex justify-between items-center"><div><p class="font-bold">${f.numero}</p><p class="text-sm">Fecha: ${f.fecha} | Cliente: ${client?.name || 'N/A'}</p><p class="text-sm">Base: $${base.toFixed(2)} | IVA ${iva}% | Total: $${total.toFixed(2)}</p></div><div><button onclick="verFacturaPDF(${f.id})" class="bg-blue-600 text-white px-3 py-1 rounded text-sm"><i class="fas fa-file-pdf"></i> PDF</button> <button onclick="eliminarFactura(${f.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm"><i class="fas fa-trash"></i></button></div></div>`;
         }).join('');
     }
 
@@ -709,7 +729,12 @@
         if (!fact) return;
         const client = currentClients.find(c => c.id === fact.clientId);
         const actividad = currentActivities.find(a => a.id === fact.actividadId);
-        const html = `<div class="print-factura" style="font-family:sans-serif; padding:20px;"><div style="text-align:right;"><h2>FACTURA</h2><p>${fact.numero}</p><p>Fecha: ${fact.fecha}</p></div><div><strong>EMPRESA:</strong><br>${empresaData.nombre}<br>${empresaData.nif}<br>${empresaData.direccion}</div><div><strong>CLIENTE:</strong><br>${client?.name}<br>${client?.address}</div><div><strong>Concepto:</strong> ${actividad?.description}</div><table border="1" cellpadding="5" style="width:100%; border-collapse:collapse;"><tr><th>Detalle</th><th>Importe</th></tr><tr><td>Mano de obra</td><td>$${fact.baseManoObra.toFixed(2)}</td></tr><tr><td>Materiales</td><td>$${fact.baseMateriales.toFixed(2)}</td></tr><tr><td>Base imponible</td><td>$${fact.base.toFixed(2)}</td></tr><tr><td>IVA ${fact.ivaPorcentaje}%</td><td>$${(fact.base * fact.ivaPorcentaje / 100).toFixed(2)}</td></tr><tr><td><strong>TOTAL</strong></td><td><strong>$${fact.total.toFixed(2)}</strong></td></tr></table><div class="mt-4 text-center">Documento generado electrónicamente</div></div>`;
+        const baseManoObra = Number(fact.baseManoObra) || 0;
+        const baseMateriales = Number(fact.baseMateriales) || 0;
+        const base = Number(fact.base) || 0;
+        const ivaPorcentaje = Number(fact.ivaPorcentaje) || 0;
+        const total = Number(fact.total) || 0;
+        const html = `<div class="print-factura" style="font-family:sans-serif; padding:20px;"><div style="text-align:right;"><h2>FACTURA</h2><p>${fact.numero}</p><p>Fecha: ${fact.fecha}</p></div><div><strong>EMPRESA:</strong><br>${empresaData.nombre}<br>${empresaData.nif}<br>${empresaData.direccion}</div><div><strong>CLIENTE:</strong><br>${client?.name}<br>${client?.address}</div><div><strong>Concepto:</strong> ${actividad?.description}</div><table border="1" cellpadding="5" style="width:100%; border-collapse:collapse;"><tr><th>Detalle</th><th>Importe</th></tr><tr><td>Mano de obra</td><td>$${baseManoObra.toFixed(2)}</td></tr><tr><td>Materiales</td><td>$${baseMateriales.toFixed(2)}</td></tr><tr><td>Base imponible</td><td>$${base.toFixed(2)}</td></tr><tr><td>IVA ${ivaPorcentaje}%</td><td>$${(base * ivaPorcentaje / 100).toFixed(2)}</td></tr><tr><td><strong>TOTAL</strong></td><td><strong>$${total.toFixed(2)}</strong></td></tr></table><div class="mt-4 text-center">Documento generado electrónicamente</div></div>`;
         const ventana = window.open();
         ventana.document.write(html);
         ventana.document.close();
@@ -729,7 +754,7 @@
         const prods = await getProductos();
         const activas = acts.filter(a => !a.completed).length;
         const finalizadas = acts.filter(a => a.completed).length;
-        const totalFacturado = facts.reduce((s, f) => s + f.total, 0);
+        const totalFacturado = facts.reduce((s, f) => s + (Number(f.total) || 0), 0);
         document.getElementById('kpiTotalClientes').innerText = clients.length;
         document.getElementById('kpiActividadesActivas').innerText = activas;
         document.getElementById('kpiActividadesFinalizadas').innerText = finalizadas;
@@ -738,7 +763,11 @@
 
         const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
         const ingresosPorMes = new Array(12).fill(0);
-        facts.forEach(f => { if (f.fecha) ingresosPorMes[new Date(f.fecha).getMonth()] += f.total; });
+        facts.forEach(f => {
+            if (!f.fecha) return;
+            const mes = new Date(f.fecha).getMonth();
+            if (Number.isInteger(mes) && mes >= 0 && mes < 12) ingresosPorMes[mes] += (Number(f.total) || 0);
+        });
         if (ingresosChart) ingresosChart.destroy();
         const ctx = document.getElementById('ingresosMensualesChart').getContext('2d');
         ingresosChart = new Chart(ctx, { type: 'bar', data: { labels: meses, datasets: [{ label: 'Ingresos ($)', data: ingresosPorMes, backgroundColor: '#3b82f6' }] } });
