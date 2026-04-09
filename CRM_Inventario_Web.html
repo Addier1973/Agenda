@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CRM + Inventario | Órdenes, Materiales, Facturación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://unpkg.com/idb@8.0.0/build/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .sidebar-item { transition: all 0.2s ease; cursor: pointer; }
+        .sidebar-item:hover { background-color: #e2e8f0; transform: translateX(4px); }
+        .active-sidebar { background-color: #dbeafe; border-left: 4px solid #3b82f6; color: #1e40af; }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .signature-canvas { border: 1px solid #ccc; border-radius: 8px; background: white; touch-action: none; width: 100%; height: auto; max-width: 400px; }
+        .payment-row, .material-row { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem; flex-wrap: wrap; }
+        .photo-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+        .photo-item { position: relative; display: inline-block; margin-right: 8px; }
+        .photo-remove { position: absolute; top: -8px; right: -8px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; margin-left: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-acta, .print-factura { padding: 1.5rem; font-size: 14pt; background: white; }
+        }
+        .hidden-section { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+<div class="flex h-screen overflow-hidden">
+    <aside class="w-64 bg-white shadow-xl z-10 flex-shrink-0 overflow-y-auto hidden md:block">
+        <div class="p-5 border-b">
+            <h1 class="text-xl font-bold text-blue-800"><i class="fas fa-briefcase mr-2"></i>CRM+Inventario</h1>
+            <p class="text-xs text-gray-400 mt-1">Órdenes, Materiales, Facturas</p>
+        </div>
+        <nav class="py-4">
+            <div data-section="dashboard" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-tachometer-alt w-6"></i><span class="ml-2">Dashboard</span></div>
+            <div data-section="clientes" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-users w-6"></i><span class="ml-2">Clientes</span></div>
+            <div data-section="actividades" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-clipboard-list w-6"></i><span class="ml-2">Órdenes de Servicio</span></div>
+            <div data-section="inventario" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-boxes w-6"></i><span class="ml-2">Inventario</span></div>
+            <div data-section="facturas" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-file-invoice-dollar w-6"></i><span class="ml-2">Facturación</span></div>
+            <div data-section="calendario" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-calendar-alt w-6"></i><span class="ml-2">Calendario</span></div>
+            <div data-section="pagos" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-dollar-sign w-6"></i><span class="ml-2">Pagos</span></div>
+            <div data-section="informes" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-chart-line w-6"></i><span class="ml-2">Informes</span></div>
+            <div data-section="configuracion" class="sidebar-item flex items-center px-5 py-3 text-gray-700"><i class="fas fa-cog w-6"></i><span class="ml-2">Configuración</span></div>
+        </nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-6">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+            <div>
+                <h2 id="mainTitle" class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                <p class="text-gray-500">Gestión integral: clientes, órdenes, inventario, facturación</p>
+            </div>
+            <div class="flex gap-2">
+                <button id="btnAddClientTop" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm"><i class="fas fa-user-plus"></i> Nuevo Cliente</button>
+                <button id="btnNewActivityTop" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm"><i class="fas fa-tasks"></i> Nueva Orden</button>
+            </div>
+        </div>
+
+        <div id="dashboardSection" class="section-content">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-5 mb-8">
+                <div class="bg-white p-5 rounded-xl shadow-sm card-hover"><div><p class="text-gray-500">Clientes</p><p id="kpiTotalClientes" class="text-3xl font-bold">0</p></div><i class="fas fa-users text-4xl text-indigo-300"></i></div>
+                <div class="bg-white p-5 rounded-xl shadow-sm card-hover"><div><p class="text-gray-500">Órdenes Activas</p><p id="kpiActividadesActivas" class="text-3xl font-bold">0</p></div><i class="fas fa-play-circle text-4xl text-yellow-300"></i></div>
+                <div class="bg-white p-5 rounded-xl shadow-sm card-hover"><div><p class="text-gray-500">Finalizadas</p><p id="kpiActividadesFinalizadas" class="text-3xl font-bold">0</p></div><i class="fas fa-check-circle text-4xl text-green-300"></i></div>
+                <div class="bg-white p-5 rounded-xl shadow-sm card-hover"><div><p class="text-gray-500">Facturado</p><p id="kpiTotalFacturado" class="text-3xl font-bold">$0</p></div><i class="fas fa-dollar-sign text-4xl text-blue-300"></i></div>
+                <div class="bg-white p-5 rounded-xl shadow-sm card-hover"><div><p class="text-gray-500">Productos en Stock</p><p id="kpiTotalProductos" class="text-3xl font-bold">0</p></div><i class="fas fa-boxes text-4xl text-purple-300"></i></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm"><canvas id="ingresosMensualesChart" width="400" height="250"></canvas></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm"><h3 class="font-bold mb-3">Próximas Órdenes</h3><div id="proximasActividadesList" class="space-y-2 max-h-64 overflow-y-auto"></div></div>
+            </div>
+        </div>
+
+        <div id="clientesSection" class="section-content hidden-section"><div class="bg-white rounded-xl shadow-sm p-5"><div class="flex justify-between flex-wrap gap-3 mb-4"><input type="text" id="searchClient" placeholder="Buscar cliente..." class="border rounded-lg px-3 py-2 w-64"><button id="btnAddClient" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">+ Agregar Cliente</button></div><div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-gray-50"><tr><th>Foto</th><th>Nombre</th><th>Dirección</th><th>Teléfono</th><th>Email</th><th>Acciones</th></tr></thead><tbody id="clientTableBody"></tbody></table></div></div></div>
+        <div id="actividadesSection" class="section-content hidden-section"><div class="bg-white rounded-xl shadow-sm p-5"><div class="flex flex-wrap gap-4 justify-between mb-4"><select id="filterClientActivity" class="border rounded-lg px-3 py-2"><option value="all">Todos los clientes</option></select><select id="sortActivities" class="border rounded-lg px-3 py-2"><option value="date_desc">Más reciente</option><option value="date_asc">Más antiguo</option></select></div><div id="activitiesListContainer" class="space-y-4"></div></div></div>
+        <div id="inventarioSection" class="section-content hidden-section"><div class="bg-white rounded-xl shadow-sm p-5"><div class="flex justify-between mb-4"><h3 class="text-xl font-bold">Productos / Materiales</h3><button id="btnAddProducto" class="bg-blue-600 text-white px-3 py-1 rounded"><i class="fas fa-plus"></i> Nuevo Producto</button></div><div id="productosListContainer" class="space-y-2"></div><hr class="my-4"><h4 class="font-bold">Movimientos de Stock</h4><div id="movimientosListContainer" class="text-sm space-y-1 max-h-60 overflow-y-auto"></div></div></div>
+        <div id="facturasSection" class="section-content hidden-section"><div class="bg-white rounded-xl shadow-sm p-5"><h3 class="text-xl font-bold mb-4">Facturas Emitidas</h3><div id="facturasListContainer" class="space-y-4"></div></div></div>
+        <div id="calendarioSection" class="section-content hidden-section"><div class="bg-white rounded-xl shadow-sm p-5"><div id="calendar"></div></div></div>
+        <div id="pagosSection" class="section-content hidden-section"><div class="bg-white rounded-xl shadow-sm p-5"><h3 class="text-xl font-bold mb-4">Resumen de Pagos</h3><div id="pagosResumenContainer"></div></div></div>
+        <div id="informesSection" class="section-content hidden-section"><div class="bg-white rounded-xl shadow-sm p-5"><h3 class="text-xl font-bold mb-4">Exportar Informes</h3><div class="flex flex-wrap gap-4"><button id="exportClientesExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-file-excel"></i> Clientes</button><button id="exportActividadesExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-file-excel"></i> Órdenes</button><button id="exportFacturasExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-file-excel"></i> Facturas</button><button id="exportInventarioExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-file-excel"></i> Inventario</button></div></div></div>
+        <div id="configuracionSection" class="section-content hidden-section"><div class="bg-white rounded-xl shadow-sm p-5"><h3 class="text-xl font-bold mb-4">Configuración</h3><div class="flex flex-wrap gap-4"><button id="btnExportData" class="bg-gray-700 text-white px-4 py-2 rounded-lg"><i class="fas fa-download"></i> Exportar Datos</button><button id="btnImportData" class="bg-gray-700 text-white px-4 py-2 rounded-lg"><i class="fas fa-upload"></i> Importar Datos</button><input type="file" id="importFileInput" accept=".json" class="hidden"></div><div class="mt-6 border-t pt-4"><h4 class="font-bold">Datos de la empresa</h4><div class="grid grid-cols-2 gap-3 mt-2"><input type="text" id="empresaNombre" placeholder="Nombre" class="border p-2 rounded"><input type="text" id="empresaNif" placeholder="NIF" class="border p-2 rounded"><input type="text" id="empresaDireccion" placeholder="Dirección" class="border p-2 rounded"><input type="text" id="empresaTelefono" placeholder="Teléfono" class="border p-2 rounded"><input type="email" id="empresaEmail" placeholder="Email" class="border p-2 rounded"><input type="number" id="empresaIva" placeholder="IVA %" class="border p-2 rounded" value="21"></div><button id="guardarDatosEmpresa" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg">Guardar</button></div></div></div>
+    </main>
+</div>
+
+<div id="clientModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-md p-6"><h3 id="clientModalTitle">Cliente</h3><input type="hidden" id="clientId"><div class="space-y-3"><div class="flex items-center gap-3"><div id="clientPhotoPreview" class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center"><i class="fas fa-user text-3xl text-gray-500"></i></div><input type="file" id="clientPhoto" accept="image/*"></div><input type="text" id="clientName" placeholder="Nombre completo *" class="w-full border p-2 rounded"><input type="text" id="clientAddress" placeholder="Dirección" class="w-full border p-2 rounded"><input type="text" id="clientPhone" placeholder="Teléfono" class="w-full border p-2 rounded"><input type="email" id="clientEmail" placeholder="Email" class="w-full border p-2 rounded"></div><div class="flex justify-end gap-3 mt-5"><button id="closeClientModal" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="saveClientBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button></div></div></div>
+<div id="productoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-md p-6"><h3 id="productoModalTitle" class="text-xl font-bold">Nuevo Producto</h3><input type="hidden" id="productoId"><div class="space-y-3 mt-3"><input type="text" id="productoNombre" placeholder="Nombre *" class="w-full border p-2 rounded"><input type="number" id="productoStock" placeholder="Stock inicial" class="w-full border p-2 rounded" value="0"><input type="number" id="productoPrecio" placeholder="Precio unitario" class="w-full border p-2 rounded" step="0.01"></div><div class="flex justify-end gap-3 mt-5"><button id="closeProductoModal" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="saveProductoBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button></div></div></div>
+<div id="activityModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-5xl m-4 p-6"><h3 id="activityModalTitle">Orden de Servicio</h3><input type="hidden" id="activityId"><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3"><select id="activityClientId" class="border rounded p-2"></select><input type="date" id="activityJobDate" class="border rounded p-2"><textarea id="activityDescription" rows="2" placeholder="Descripción *" class="md:col-span-2 border rounded p-2"></textarea><input type="date" id="activityStartDate" placeholder="Fecha inicio *" class="border rounded p-2"><input type="date" id="activityEndDate" placeholder="Fecha conclusión" class="border rounded p-2"><input type="number" id="activityCost" step="0.01" placeholder="Costo Mano Obra" class="border rounded p-2"><input type="number" id="activityTotal" step="0.01" placeholder="Total Mano Obra" class="border rounded p-2"><input type="text" id="activityPaymentMethod" placeholder="Método de pago" class="border rounded p-2"><div class="md:col-span-2"><label>Fotos (max 5)</label><input type="file" id="activityPhotos" multiple accept="image/*" class="w-full border p-1"><div id="photosPreview" class="flex flex-wrap gap-2 mt-2"></div></div></div>
+<div class="mt-4 border-t pt-3"><label class="font-bold block mb-1">Materiales utilizados (descuentan del inventario)</label><div id="materialesContainer" class="space-y-2"></div><button type="button" id="addMaterialBtn" class="text-blue-600 text-sm mt-1"><i class="fas fa-plus-circle"></i> Agregar material</button></div>
+<div class="mt-4"><label class="font-bold">Pagos realizados</label><div id="paymentsMadeContainer" class="space-y-1"></div><button type="button" id="addPaymentMade" class="text-blue-600 text-sm">+ Agregar pago</button></div>
+<div class="mt-3"><label class="font-bold">Pagos pendientes</label><div id="pendingPaymentsContainer" class="space-y-1"></div><button type="button" id="addPendingPayment" class="text-orange-600 text-sm">+ Agregar pendiente</button></div>
+<div class="flex justify-end gap-3 mt-6"><button id="closeActivityModalBtn" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="saveActivityBtn" class="px-4 py-2 bg-green-600 text-white rounded">Guardar Orden</button></div></div></div>
+<div id="closeOrderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold">Finalizar Orden</h3><div id="closeActivityInfo" class="bg-gray-50 p-3 rounded my-3 text-sm"></div><canvas id="signatureCanvas" width="400" height="180" class="signature-canvas"></canvas><div class="flex gap-2 mt-2"><button id="clearSignatureBtn" class="text-xs bg-gray-200 px-2 py-1 rounded">Limpiar</button></div><div class="flex justify-end gap-3 mt-5"><button id="cancelCloseModal" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="confirmCloseActivity" class="px-4 py-2 bg-red-600 text-white rounded">Generar Acta de Fin</button></div></div></div>
+<div id="actaModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-2xl p-6 relative"><div id="actaContent"></div><div class="flex justify-end gap-3 mt-4 no-print"><button id="closeActaModal" class="px-4 py-2 bg-gray-300 rounded">Cerrar</button><button id="printActaBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Imprimir</button><button id="downloadPdfBtn" class="px-4 py-2 bg-green-600 text-white rounded">Descargar PDF</button></div></div></div>
+<div id="facturarModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-2xl p-6"><h3 class="text-xl font-bold">Emitir Factura</h3><p id="facturarActividadInfo" class="text-gray-500 mb-4"></p><div class="grid grid-cols-2 gap-3"><div><label>N° Factura</label><input type="text" id="facturaNumero" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Fecha</label><input type="date" id="facturaFecha" class="border p-2 rounded w-full"></div><div><label>Base Mano Obra</label><input type="number" id="facturaBaseManoObra" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Base Materiales</label><input type="number" id="facturaBaseMateriales" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Base Imponible</label><input type="number" id="facturaBase" step="0.01" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>IVA %</label><input type="number" id="facturaIvaPorcentaje" step="0.1" class="border p-2 rounded w-full"></div><div class="col-span-2"><label>Total Factura</label><input type="number" id="facturaTotal" step="0.01" readonly class="border bg-gray-100 p-2 rounded w-full"></div></div><div class="flex justify-end gap-3 mt-5"><button id="cancelFacturarModal" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="confirmEmitirFactura" class="px-4 py-2 bg-green-600 text-white rounded">Emitir Factura</button></div></div></div>
+
+<script>
+    const DB_NAME = 'CRM_INVENTARIO_V2';
+    const DB_VERSION = 1;
+    let dbPromise = null;
+    let currentClients = [], currentActivities = [], currentFacturas = [], currentProductos = [], currentMovimientos = [];
+    let signaturePad = null, currentActivityForClosing = null;
+    let ingresosChart = null;
+
+    async function initDB() {
+        const { openDB } = window.idb;
+        return openDB(DB_NAME, DB_VERSION, {
+            upgrade(db) {
+                if (!db.objectStoreNames.contains('clients')) db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true });
+                if (!db.objectStoreNames.contains('activities')) {
+                    const store = db.createObjectStore('activities', { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('clientId', 'clientId');
+                }
+                if (!db.objectStoreNames.contains('facturas')) db.createObjectStore('facturas', { keyPath: 'id', autoIncrement: true });
+                if (!db.objectStoreNames.contains('productos')) db.createObjectStore('productos', { keyPath: 'id', autoIncrement: true });
+                if (!db.objectStoreNames.contains('movimientos')) db.createObjectStore('movimientos', { keyPath: 'id', autoIncrement: true });
+            }
+        });
+    }
+
+    async function getClients() { const db = await dbPromise; return await db.getAll('clients'); }
+    async function saveClient(client) { const db = await dbPromise; if (client.id) await db.put('clients', client); else client.id = await db.add('clients', client); return client; }
+    async function deleteClient(id) { const db = await dbPromise; await db.delete('clients', id); }
+    async function getActivities() { const db = await dbPromise; return await db.getAll('activities'); }
+    async function saveActivity(act) { const db = await dbPromise; if (act.id) await db.put('activities', act); else act.id = await db.add('activities', act); return act; }
+    async function deleteActivity(id) { const db = await dbPromise; await db.delete('activities', id); }
+    async function getFacturas() { const db = await dbPromise; return await db.getAll('facturas'); }
+    async function saveFactura(fact) { const db = await dbPromise; if (fact.id) await db.put('facturas', fact); else fact.id = await db.add('facturas', fact); return fact; }
+    async function deleteFactura(id) { const db = await dbPromise; await db.delete('facturas', id); }
+    async function getProductos() { const db = await dbPromise; return await db.getAll('productos'); }
+    async function saveProducto(prod) { const db = await dbPromise; if (prod.id) await db.put('productos', prod); else prod.id = await db.add('productos', prod); return prod; }
+    async function deleteProductoById(id) { const db = await dbPromise; await db.delete('productos', id); }
+    async function getMovimientos() { const db = await dbPromise; return await db.getAll('movimientos'); }
+    async function saveMovimiento(mov) { const db = await dbPromise; if (mov.id) await db.put('movimientos', mov); else mov.id = await db.add('movimientos', mov); return mov; }
+    async function clearAllData() { const db = await dbPromise; await db.clear('clients'); await db.clear('activities'); await db.clear('facturas'); await db.clear('productos'); await db.clear('movimientos'); }
+
+    let empresaData = {
+        nombre: localStorage.getItem('empresaNombre') || 'Mi Empresa',
+        nif: localStorage.getItem('empresaNif') || 'B12345678',
+        direccion: localStorage.getItem('empresaDireccion') || '',
+        telefono: localStorage.getItem('empresaTelefono') || '',
+        email: localStorage.getItem('empresaEmail') || '',
+        iva: parseFloat(localStorage.getItem('empresaIva')) || 21
+    };
+
+    function guardarDatosEmpresaUI() {
+        empresaData.nombre = document.getElementById('empresaNombre').value;
+        empresaData.nif = document.getElementById('empresaNif').value;
+        empresaData.direccion = document.getElementById('empresaDireccion').value;
+        empresaData.telefono = document.getElementById('empresaTelefono').value;
+        empresaData.email = document.getElementById('empresaEmail').value;
+        empresaData.iva = parseFloat(document.getElementById('empresaIva').value) || 21;
+        for (const k in empresaData) localStorage.setItem(`empresa${k.charAt(0).toUpperCase() + k.slice(1)}`, empresaData[k]);
+        alert('Datos guardados');
+    }
+
+    function cargarDatosEmpresaUI() {
+        document.getElementById('empresaNombre').value = empresaData.nombre;
+        document.getElementById('empresaNif').value = empresaData.nif;
+        document.getElementById('empresaDireccion').value = empresaData.direccion;
+        document.getElementById('empresaTelefono').value = empresaData.telefono;
+        document.getElementById('empresaEmail').value = empresaData.email;
+        document.getElementById('empresaIva').value = empresaData.iva;
+    }
+
+    function fileToBase64(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function compressImage(file, maxWidth = 800, quality = 0.7) {
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    if (w > maxWidth) { h = (h * maxWidth) / w; w = maxWidth; }
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function showLoading(show) {
+        let overlay = document.getElementById('globalLoading');
+        if (show && !overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'globalLoading';
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = '<div class="bg-white p-4 rounded shadow"><div class="spinner"></div><p>Procesando...</p></div>';
+            document.body.appendChild(overlay);
+        } else if (show) {
+            overlay.classList.remove('hidden');
+        } else if (overlay) {
+            overlay.classList.add('hidden');
+        }
+    }
+
+    async function renderClients() {
+        currentClients = await getClients();
+        const search = document.getElementById('searchClient')?.value.toLowerCase() || '';
+        const filtered = currentClients.filter(c => c.name?.toLowerCase().includes(search) || c.email?.toLowerCase().includes(search));
+        const tbody = document.getElementById('clientTableBody');
+        if (tbody) tbody.innerHTML = filtered.map(c => {
+            const avatar = c.photo ? `<img src="${c.photo}" class="w-10 h-10 rounded-full object-cover">` : `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"><i class="fas fa-user text-gray-500"></i></div>`;
+            return `<tr class="border-b"><td class="p-2">${avatar}</td><td class="p-2 font-medium">${escapeHtml(c.name)}</td><td class="p-2">${escapeHtml(c.address || '')}</td><td class="p-2">${escapeHtml(c.phone || '')}</td><td class="p-2">${escapeHtml(c.email || '')}</td><td class="p-2 space-x-2"><button onclick="editClient(${c.id})" class="text-blue-600"><i class="fas fa-edit"></i> Editar</button><button onclick="removeClient(${c.id})" class="text-red-600"><i class="fas fa-trash"></i> Eliminar</button></td></tr>`;
+        }).join('');
+        await fillSelects();
+    }
+
+    window.editClient = async (id) => {
+        const c = currentClients.find(client => client.id === id);
+        if (!c) return;
+        document.getElementById('clientId').value = c.id;
+        document.getElementById('clientName').value = c.name;
+        document.getElementById('clientAddress').value = c.address || '';
+        document.getElementById('clientPhone').value = c.phone || '';
+        document.getElementById('clientEmail').value = c.email || '';
+        const preview = document.getElementById('clientPhotoPreview');
+        if (c.photo) preview.innerHTML = `<img src="${c.photo}" class="w-full h-full object-cover rounded-full">`;
+        else preview.innerHTML = '<i class="fas fa-user text-3xl text-gray-500"></i>';
+        document.getElementById('clientModalTitle').innerText = 'Editar Cliente';
+        document.getElementById('clientModal').classList.remove('hidden');
+    };
+
+    window.removeClient = async (id) => {
+        if (!confirm('Eliminar cliente y todas sus órdenes, facturas?')) return;
+        await deleteClient(id);
+        const acts = await getActivities();
+        for (const a of acts.filter(item => item.clientId === id)) await deleteActivity(a.id);
+        const facts = await getFacturas();
+        for (const f of facts.filter(item => item.clientId === id)) await deleteFactura(f.id);
+        await refreshAll();
+    };
+
+    async function fillSelects() {
+        const clients = await getClients();
+        const selectAct = document.getElementById('activityClientId');
+        const filterSelect = document.getElementById('filterClientActivity');
+        if (selectAct) selectAct.innerHTML = '<option value="">Seleccione cliente</option>' + clients.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+        if (filterSelect) filterSelect.innerHTML = '<option value="all">Todos los clientes</option>' + clients.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    }
+
+    async function renderInventario() {
+        currentProductos = await getProductos();
+        currentMovimientos = await getMovimientos();
+        const container = document.getElementById('productosListContainer');
+        if (container) {
+            container.innerHTML = currentProductos.map(p => `<div class="border p-3 rounded flex justify-between items-center"><div><span class="font-bold">${escapeHtml(p.nombre)}</span> - Stock: ${p.stock} - Precio: $${p.precio?.toFixed(2) || 0}</div><div><button onclick="editProducto(${p.id})" class="text-blue-500 mr-2"><i class="fas fa-edit"></i></button><button onclick="deleteProducto(${p.id})" class="text-red-500"><i class="fas fa-trash"></i></button></div></div>`).join('') || '<p class="text-gray-400">No hay productos</p>';
+        }
+        const movContainer = document.getElementById('movimientosListContainer');
+        if (movContainer) movContainer.innerHTML = currentMovimientos.slice(-20).reverse().map(m => `<div class="border-b py-1">${m.fecha} - ${m.tipo}: ${escapeHtml(m.productoNombre)} (${m.cantidad}) - Stock final: ${m.stockFinal}</div>`).join('');
+    }
+
+    window.editProducto = async (id) => {
+        const p = currentProductos.find(item => item.id === id);
+        if (!p) return;
+        document.getElementById('productoId').value = p.id;
+        document.getElementById('productoNombre').value = p.nombre;
+        document.getElementById('productoStock').value = p.stock;
+        document.getElementById('productoPrecio').value = p.precio;
+        document.getElementById('productoModalTitle').innerText = 'Editar Producto';
+        document.getElementById('productoModal').classList.remove('hidden');
+    };
+
+    window.deleteProducto = async (id) => {
+        if (!confirm('Eliminar producto?')) return;
+        await deleteProductoById(id);
+        await refreshAll();
+    };
+
+    async function actualizarStock(productoId, cantidad, motivo, actividadId = null) {
+        const prod = currentProductos.find(p => p.id === productoId);
+        if (!prod) return false;
+        if (prod.stock + cantidad < 0) { alert(`Stock insuficiente para ${prod.nombre}`); return false; }
+        prod.stock += cantidad;
+        await saveProducto(prod);
+        const movimiento = { productoId, productoNombre: prod.nombre, tipo: cantidad >= 0 ? 'Entrada' : 'Salida', cantidad: Math.abs(cantidad), stockFinal: prod.stock, fecha: new Date().toISOString().slice(0, 10), actividadId, motivo };
+        await saveMovimiento(movimiento);
+        await refreshAll();
+        return true;
+    }
+
+    function addMaterialRow(container, productoId = null, cantidad = 1, precioUnitario = 0) {
+        const row = document.createElement('div');
+        row.className = 'material-row';
+        const productosSelect = `<select class="material-producto border rounded p-1 w-48">${currentProductos.map(p => `<option value="${p.id}" data-precio="${p.precio}" ${p.id == productoId ? 'selected' : ''}>${escapeHtml(p.nombre)} (Stock: ${p.stock})</option>`).join('')}</select>`;
+        row.innerHTML = `<div>${productosSelect}</div><input type="number" class="material-cantidad border rounded p-1 w-24" value="${cantidad}" step="1" min="1"><span class="material-precio text-sm">$${(precioUnitario || 0).toFixed(2)}</span><button type="button" class="text-red-500 removeMaterialBtn"><i class="fas fa-minus-circle"></i></button>`;
+        container.appendChild(row);
+        const select = row.querySelector('.material-producto');
+        const precioSpan = row.querySelector('.material-precio');
+        const updatePrecio = () => {
+            const selected = select.options[select.selectedIndex];
+            const precio = parseFloat(selected?.dataset.precio) || 0;
+            precioSpan.innerText = `$${precio.toFixed(2)}`;
+        };
+        select.addEventListener('change', updatePrecio);
+        updatePrecio();
+        row.querySelector('.removeMaterialBtn').addEventListener('click', () => row.remove());
+    }
+
+    function collectMateriales(container) {
+        const rows = container.querySelectorAll('.material-row');
+        return Array.from(rows).map(row => {
+            const select = row.querySelector('.material-producto');
+            const productoId = parseInt(select.value, 10);
+            const cantidad = parseInt(row.querySelector('.material-cantidad').value, 10) || 0;
+            const precio = parseFloat(select.options[select.selectedIndex]?.dataset.precio) || 0;
+            const nombre = select.options[select.selectedIndex]?.text.split(' (')[0];
+            return { productoId, cantidad, precioUnitario: precio, nombreProducto: nombre, total: cantidad * precio };
+        }).filter(m => m.productoId && m.cantidad > 0);
+    }
+
+    async function aplicarMaterialesActivity(activityId, nuevosMateriales, oldMaterials) {
+        for (const old of oldMaterials) {
+            const stillExists = nuevosMateriales.some(m => m.productoId === old.productoId && m.cantidad === old.cantidad);
+            if (!stillExists) await actualizarStock(old.productoId, old.cantidad, 'Devolución por edición', activityId);
+        }
+        for (const mat of nuevosMateriales) {
+            const oldMat = oldMaterials.find(m => m.productoId === mat.productoId);
+            if (oldMat) {
+                const diff = mat.cantidad - oldMat.cantidad;
+                if (diff !== 0) await actualizarStock(mat.productoId, -diff, 'Ajuste materiales orden', activityId);
+            } else {
+                await actualizarStock(mat.productoId, -mat.cantidad, 'Consumo orden servicio', activityId);
+            }
+        }
+    }
+
+    async function renderActivities() {
+        currentActivities = await getActivities();
+        const filterVal = document.getElementById('filterClientActivity')?.value || 'all';
+        let filtered = filterVal === 'all' ? currentActivities : currentActivities.filter(a => a.clientId == filterVal);
+        const sort = document.getElementById('sortActivities')?.value;
+        if (sort === 'date_desc') filtered.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
+        else filtered.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
+        const clients = await getClients();
+        const container = document.getElementById('activitiesListContainer');
+        if (!container) return;
+        if (filtered.length === 0) { container.innerHTML = '<div class="text-center text-gray-400">No hay órdenes</div>'; return; }
+        container.innerHTML = filtered.map(act => {
+            const client = clients.find(c => c.id === act.clientId);
+            const status = act.completed ? 'Finalizada' : 'En progreso';
+            const statusColor = act.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+            const totalPaid = (act.paymentsMade || []).reduce((s, p) => s + (p.amount || 0), 0);
+            const costoMateriales = (act.materiales || []).reduce((sum, m) => sum + (m.cantidad * m.precioUnitario), 0);
+            const totalFinal = (act.total || 0) + costoMateriales;
+            return `<div class="border rounded-lg p-4 shadow-sm"><div class="flex flex-wrap justify-between"><div><span class="font-bold">${escapeHtml(act.description || '')}</span><span class="ml-2 px-2 py-0.5 rounded-full text-xs ${statusColor}">${status}</span></div><div><button onclick="viewActaInicio(${act.id})" class="text-indigo-600 text-sm mr-2"><i class="fas fa-file-signature"></i> Acta Inicio</button>${!act.completed ? `<button onclick="openEditActivity(${act.id})" class="text-blue-600 text-sm mr-2"><i class="fas fa-pen"></i> Editar</button><button onclick="prepareCloseActivity(${act.id})" class="text-red-600 text-sm mr-2"><i class="fas fa-clipboard-check"></i> Cerrar</button>` : `<button onclick="viewActaFin(${act.id})" class="text-purple-600 text-sm mr-2"><i class="fas fa-check-circle"></i> Acta Fin</button><button onclick="reopenActivity(${act.id})" class="text-orange-600 text-sm mr-2"><i class="fas fa-undo-alt"></i> Reabrir</button>`}<button onclick="facturarActividad(${act.id})" class="text-green-600 text-sm mr-2"><i class="fas fa-file-invoice"></i> Facturar</button><button onclick="deleteActivityAction(${act.id})" class="text-gray-500 text-sm"><i class="fas fa-trash"></i></button></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mt-2 text-gray-600"><div>Inicio: ${act.startDate || '—'}</div><div>Fin: ${act.endDate || '—'}</div><div>Mano Obra: $${act.total || 0}</div><div>Materiales: $${costoMateriales}</div><div>Total: $${totalFinal}</div><div>Pagado: $${totalPaid}</div><div>Cliente: ${client ? escapeHtml(client.name) : 'N/A'}</div></div></div>`;
+        }).join('');
+    }
+
+    window.openEditActivity = async (id) => {
+        const act = currentActivities.find(a => a.id === id);
+        if (act && !act.completed) await openActivityModal(act);
+        else alert('No editable si finalizada');
+    };
+
+    window.deleteActivityAction = async (id) => {
+        if (!confirm('Eliminar orden? Se liberará el stock de materiales consumidos')) return;
+        const act = currentActivities.find(a => a.id === id);
+        if (act && act.materiales) {
+            for (const mat of act.materiales) await actualizarStock(mat.productoId, mat.cantidad, 'Devolución por eliminación orden', id);
+        }
+        await deleteActivity(id);
+        await refreshAll();
+    };
+
+    window.reopenActivity = async (id) => {
+        if (!confirm('Reabrir orden? Se borrará firma de cierre, el stock no se modifica')) return;
+        const act = currentActivities.find(a => a.id === id);
+        if (!act) return;
+        act.completed = false;
+        act.completionSignature = null;
+        act.completionDate = null;
+        await saveActivity(act);
+        await refreshAll();
+        alert('Reabierta');
+    };
+
+    async function openActivityModal(activity = null) {
+        await fillSelects();
+        await renderInventario();
+        document.getElementById('activityId').value = '';
+        document.getElementById('activityDescription').value = '';
+        document.getElementById('activityJobDate').value = '';
+        document.getElementById('activityStartDate').value = '';
+        document.getElementById('activityEndDate').value = '';
+        document.getElementById('activityCost').value = '';
+        document.getElementById('activityTotal').value = '';
+        document.getElementById('activityPaymentMethod').value = '';
+        document.getElementById('photosPreview').innerHTML = '';
+        document.getElementById('activityPhotos').value = '';
+
+        const madeContainer = document.getElementById('paymentsMadeContainer');
+        const pendingContainer = document.getElementById('pendingPaymentsContainer');
+        madeContainer.innerHTML = '';
+        pendingContainer.innerHTML = '';
+        addPaymentRow(madeContainer);
+        addPaymentRow(pendingContainer);
+
+        const materialesContainer = document.getElementById('materialesContainer');
+        materialesContainer.innerHTML = '';
+
+        if (activity) {
+            document.getElementById('activityModalTitle').innerText = 'Editar Orden';
+            document.getElementById('activityId').value = activity.id;
+            document.getElementById('activityClientId').value = activity.clientId;
+            document.getElementById('activityDescription').value = activity.description || '';
+            document.getElementById('activityJobDate').value = activity.jobDate || '';
+            document.getElementById('activityStartDate').value = activity.startDate || '';
+            document.getElementById('activityEndDate').value = activity.endDate || '';
+            document.getElementById('activityCost').value = activity.cost || '';
+            document.getElementById('activityTotal').value = activity.total || '';
+            document.getElementById('activityPaymentMethod').value = activity.paymentMethod || '';
+            madeContainer.innerHTML = '';
+            pendingContainer.innerHTML = '';
+            (activity.paymentsMade || []).forEach(p => addPaymentRow(madeContainer, p.date, p.amount));
+            (activity.pendingPayments || []).forEach(p => addPaymentRow(pendingContainer, p.date, p.amount));
+            if ((activity.paymentsMade || []).length === 0) addPaymentRow(madeContainer);
+            if ((activity.pendingPayments || []).length === 0) addPaymentRow(pendingContainer);
+            if (activity.photos && activity.photos.length) {
+                const previewDiv = document.getElementById('photosPreview');
+                previewDiv.innerHTML = activity.photos.map((src, idx) => `<div class="photo-item"><img src="${src}" class="photo-preview"><span class="photo-remove" data-idx="${idx}">×</span></div>`).join('');
+                document.querySelectorAll('.photo-remove').forEach(btn => btn.addEventListener('click', () => btn.closest('.photo-item').remove()));
+            }
+            if (activity.materiales && activity.materiales.length) {
+                for (const mat of activity.materiales) addMaterialRow(materialesContainer, mat.productoId, mat.cantidad, mat.precioUnitario, mat.nombreProducto);
+            } else {
+                addMaterialRow(materialesContainer);
+            }
+        } else {
+            document.getElementById('activityModalTitle').innerText = 'Nueva Orden';
+            addMaterialRow(materialesContainer);
+        }
+        document.getElementById('activityModal').classList.remove('hidden');
+    }
+
+    async function saveActivityFromModal() {
+        const id = document.getElementById('activityId').value;
+        const clientId = parseInt(document.getElementById('activityClientId').value, 10);
+        const description = document.getElementById('activityDescription').value.trim();
+        const startDate = document.getElementById('activityStartDate').value;
+        if (!clientId || !description || !startDate) { alert('Complete cliente, descripción y fecha de inicio'); return; }
+
+        showLoading(true);
+        try {
+            const currentPhotos = Array.from(document.querySelectorAll('#photosPreview .photo-item img')).map(img => img.src);
+            const newFiles = document.getElementById('activityPhotos').files;
+            if (currentPhotos.length + newFiles.length > 5) { alert('Máximo 5 fotos'); showLoading(false); return; }
+            for (const file of newFiles) currentPhotos.push(await compressImage(file));
+
+            const paymentsMade = collectPayments(document.getElementById('paymentsMadeContainer'));
+            const pendingPayments = collectPayments(document.getElementById('pendingPaymentsContainer'));
+            const materiales = collectMateriales(document.getElementById('materialesContainer'));
+            const activity = {
+                id: id ? parseInt(id, 10) : undefined,
+                clientId,
+                jobDate: document.getElementById('activityJobDate').value,
+                description,
+                startDate,
+                endDate: document.getElementById('activityEndDate').value,
+                cost: parseFloat(document.getElementById('activityCost').value) || 0,
+                total: parseFloat(document.getElementById('activityTotal').value) || 0,
+                paymentMethod: document.getElementById('activityPaymentMethod').value,
+                paymentsMade,
+                pendingPayments,
+                photos: currentPhotos,
+                materiales,
+                completed: false,
+                completionSignature: null,
+                completionDate: null
+            };
+            if (id) {
+                const old = currentActivities.find(a => a.id == id);
+                if (old) { activity.completed = old.completed; await aplicarMaterialesActivity(parseInt(id, 10), materiales, old.materiales || []); }
+            } else {
+                for (const mat of materiales) await actualizarStock(mat.productoId, -mat.cantidad, 'Consumo orden servicio', null);
+            }
+            await saveActivity(activity);
+            document.getElementById('activityModal').classList.add('hidden');
+            await refreshAll();
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function addPaymentRow(container, dateVal = '', amountVal = '') {
+        const row = document.createElement('div');
+        row.className = 'payment-row';
+        row.innerHTML = `<input type="date" class="border rounded p-1 w-36" value="${dateVal}"><input type="number" step="0.01" class="border rounded p-1 w-32" value="${amountVal}" placeholder="Monto"><button type="button" class="text-red-500 removeRowBtn"><i class="fas fa-minus-circle"></i></button>`;
+        container.appendChild(row);
+        row.querySelector('.removeRowBtn').addEventListener('click', () => row.remove());
+    }
+
+    function collectPayments(container) {
+        return Array.from(container.querySelectorAll('.payment-row')).map(row => ({
+            date: row.querySelector('input:first-child').value,
+            amount: parseFloat(row.querySelector('input:nth-child(2)').value) || 0
+        })).filter(p => p.date || p.amount);
+    }
+
+    async function viewActaInicio(actId) {
+        const act = currentActivities.find(a => a.id === actId);
+        const client = currentClients.find(c => c.id === act.clientId);
+        const materialesHtml = (act.materiales || []).map(m => `<li>${m.nombreProducto} x${m.cantidad} = $${(m.cantidad * m.precioUnitario).toFixed(2)}</li>`).join('');
+        const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE INICIO / ORDEN DE SERVICIO</h2><p><strong>Cliente:</strong> ${client?.name} - ${client?.address || ''}</p><p><strong>Fecha inicio:</strong> ${act.startDate}</p><p><strong>Descripción:</strong> ${escapeHtml(act.description)}</p><p><strong>Mano de obra total:</strong> $${act.total}</p><p><strong>Materiales:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><div class="mt-6">_________________________<br>Firma responsable</div></div>`;
+        showActaModal(html);
+    }
+
+    async function viewActaFin(actId) {
+        const act = currentActivities.find(a => a.id === actId);
+        if (!act.completed) { alert('No finalizada'); return; }
+        const client = currentClients.find(c => c.id === act.clientId);
+        const signatureImg = act.completionSignature ? `<img src="${act.completionSignature}" style="max-width:200px;">` : '<p>Sin firma</p>';
+        const materialesHtml = (act.materiales || []).map(m => `<li>${m.nombreProducto} x${m.cantidad} = $${(m.cantidad * m.precioUnitario).toFixed(2)}</li>`).join('');
+        const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE FIN Y ACEPTACIÓN</h2><p><strong>Cliente:</strong> ${client?.name}</p><p><strong>Orden:</strong> ${escapeHtml(act.description)}</p><p><strong>Fecha cierre:</strong> ${act.completionDate}</p><p><strong>Materiales utilizados:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><p><strong>Firma del cliente:</strong><br>${signatureImg}</p><div class="mt-4">El cliente acepta la finalización.</div></div>`;
+        showActaModal(html);
+    }
+
+    function showActaModal(html) {
+        document.getElementById('actaContent').innerHTML = html;
+        document.getElementById('actaModal').classList.remove('hidden');
+    }
+
+    document.getElementById('printActaBtn').onclick = () => window.print();
+    document.getElementById('downloadPdfBtn').onclick = async () => {
+        const element = document.getElementById('actaContent');
+        const btn = document.getElementById('downloadPdfBtn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+        btn.disabled = true;
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save(`acta_${Date.now()}.pdf`);
+        btn.innerHTML = '<i class="fas fa-file-pdf"></i> Descargar PDF';
+        btn.disabled = false;
+    };
+
+    window.prepareCloseActivity = async (actId) => {
+        const act = currentActivities.find(a => a.id === actId);
+        if (act.completed) { alert('Ya cerrada'); return; }
+        currentActivityForClosing = act;
+        const client = currentClients.find(c => c.id === act.clientId);
+        const costoMateriales = (act.materiales || []).reduce((s, m) => s + m.cantidad * m.precioUnitario, 0);
+        document.getElementById('closeActivityInfo').innerHTML = `<strong>${escapeHtml(act.description)}</strong><br>Cliente: ${client?.name}<br>Total Mano Obra: $${act.total}<br>Materiales: $${costoMateriales}`;
+        const canvas = document.getElementById('signatureCanvas');
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        if (signaturePad) signaturePad.clear();
+        signaturePad = new SignaturePad(canvas, { backgroundColor: 'white' });
+        document.getElementById('closeOrderModal').classList.remove('hidden');
+    };
+
+    document.getElementById('clearSignatureBtn').onclick = () => signaturePad?.clear();
+    document.getElementById('confirmCloseActivity').onclick = async () => {
+        if (!signaturePad || signaturePad.isEmpty()) { alert('Firma requerida'); return; }
+        currentActivityForClosing.completed = true;
+        currentActivityForClosing.completionSignature = signaturePad.toDataURL();
+        currentActivityForClosing.completionDate = new Date().toISOString().split('T')[0];
+        await saveActivity(currentActivityForClosing);
+        document.getElementById('closeOrderModal').classList.add('hidden');
+        await refreshAll();
+        alert('Acta de Fin generada');
+    };
+
+    let actividadParaFacturar = null;
+    window.facturarActividad = async (actId) => {
+        const act = currentActivities.find(a => a.id === actId);
+        if (!act) return;
+        actividadParaFacturar = act;
+        const client = currentClients.find(c => c.id === act.clientId);
+        const costoMateriales = (act.materiales || []).reduce((s, m) => s + m.cantidad * m.precioUnitario, 0);
+        const baseManoObra = act.total || 0;
+        const baseTotal = baseManoObra + costoMateriales;
+        document.getElementById('facturarActividadInfo').innerHTML = `Orden: ${escapeHtml(act.description)}<br>Cliente: ${client?.name}<br>Mano Obra: $${baseManoObra}<br>Materiales: $${costoMateriales}`;
+        const facturas = await getFacturas();
+        const anio = new Date().getFullYear();
+        const num = facturas.filter(f => f.numero && f.numero.startsWith(`F-${anio}`)).length + 1;
+        document.getElementById('facturaNumero').value = `F-${anio}-${num.toString().padStart(4, '0')}`;
+        document.getElementById('facturaFecha').value = new Date().toISOString().split('T')[0];
+        document.getElementById('facturaBaseManoObra').value = baseManoObra.toFixed(2);
+        document.getElementById('facturaBaseMateriales').value = costoMateriales.toFixed(2);
+        document.getElementById('facturaBase').value = baseTotal.toFixed(2);
+        document.getElementById('facturaIvaPorcentaje').value = empresaData.iva;
+        document.getElementById('facturaTotal').value = (baseTotal * (1 + empresaData.iva / 100)).toFixed(2);
+        document.getElementById('facturarModal').classList.remove('hidden');
+    };
+
+    document.getElementById('cancelFacturarModal').onclick = () => document.getElementById('facturarModal').classList.add('hidden');
+    document.getElementById('facturaIvaPorcentaje').addEventListener('input', function () {
+        const base = parseFloat(document.getElementById('facturaBase').value) || 0;
+        const iva = parseFloat(this.value) || 0;
+        document.getElementById('facturaTotal').value = (base * (1 + iva / 100)).toFixed(2);
+    });
+    document.getElementById('confirmEmitirFactura').onclick = async () => {
+        if (!actividadParaFacturar) return;
+        const factura = {
+            id: undefined,
+            numero: document.getElementById('facturaNumero').value,
+            fecha: document.getElementById('facturaFecha').value,
+            clientId: actividadParaFacturar.clientId,
+            actividadId: actividadParaFacturar.id,
+            baseManoObra: parseFloat(document.getElementById('facturaBaseManoObra').value),
+            baseMateriales: parseFloat(document.getElementById('facturaBaseMateriales').value),
+            base: parseFloat(document.getElementById('facturaBase').value),
+            ivaPorcentaje: parseFloat(document.getElementById('facturaIvaPorcentaje').value),
+            total: parseFloat(document.getElementById('facturaTotal').value),
+            emitida: new Date().toISOString()
+        };
+        await saveFactura(factura);
+        document.getElementById('facturarModal').classList.add('hidden');
+        await refreshAll();
+        alert(`Factura ${factura.numero} emitida`);
+    };
+
+    async function renderFacturas() {
+        currentFacturas = await getFacturas();
+        const container = document.getElementById('facturasListContainer');
+        if (!container) return;
+        if (currentFacturas.length === 0) { container.innerHTML = '<div class="text-center text-gray-400">No hay facturas</div>'; return; }
+        const clients = await getClients();
+        container.innerHTML = currentFacturas.map(f => {
+            const client = clients.find(c => c.id === f.clientId);
+            return `<div class="border rounded-lg p-4 shadow-sm flex justify-between items-center"><div><p class="font-bold">${f.numero}</p><p class="text-sm">Fecha: ${f.fecha} | Cliente: ${client?.name || 'N/A'}</p><p class="text-sm">Base: $${f.base} | IVA ${f.ivaPorcentaje}% | Total: $${f.total}</p></div><div><button onclick="verFacturaPDF(${f.id})" class="bg-blue-600 text-white px-3 py-1 rounded text-sm"><i class="fas fa-file-pdf"></i> PDF</button> <button onclick="eliminarFactura(${f.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm"><i class="fas fa-trash"></i></button></div></div>`;
+        }).join('');
+    }
+
+    window.verFacturaPDF = async (factId) => {
+        const fact = currentFacturas.find(f => f.id === factId);
+        if (!fact) return;
+        const client = currentClients.find(c => c.id === fact.clientId);
+        const actividad = currentActivities.find(a => a.id === fact.actividadId);
+        const html = `<div class="print-factura" style="font-family:sans-serif; padding:20px;"><div style="text-align:right;"><h2>FACTURA</h2><p>${fact.numero}</p><p>Fecha: ${fact.fecha}</p></div><div><strong>EMPRESA:</strong><br>${empresaData.nombre}<br>${empresaData.nif}<br>${empresaData.direccion}</div><div><strong>CLIENTE:</strong><br>${client?.name}<br>${client?.address}</div><div><strong>Concepto:</strong> ${actividad?.description}</div><table border="1" cellpadding="5" style="width:100%; border-collapse:collapse;"><tr><th>Detalle</th><th>Importe</th></tr><tr><td>Mano de obra</td><td>$${fact.baseManoObra.toFixed(2)}</td></tr><tr><td>Materiales</td><td>$${fact.baseMateriales.toFixed(2)}</td></tr><tr><td>Base imponible</td><td>$${fact.base.toFixed(2)}</td></tr><tr><td>IVA ${fact.ivaPorcentaje}%</td><td>$${(fact.base * fact.ivaPorcentaje / 100).toFixed(2)}</td></tr><tr><td><strong>TOTAL</strong></td><td><strong>$${fact.total.toFixed(2)}</strong></td></tr></table><div class="mt-4 text-center">Documento generado electrónicamente</div></div>`;
+        const ventana = window.open();
+        ventana.document.write(html);
+        ventana.document.close();
+        ventana.print();
+    };
+
+    window.eliminarFactura = async (id) => {
+        if (!confirm('Eliminar factura?')) return;
+        await deleteFactura(id);
+        await refreshAll();
+    };
+
+    async function actualizarDashboard() {
+        const clients = await getClients();
+        const acts = await getActivities();
+        const facts = await getFacturas();
+        const prods = await getProductos();
+        const activas = acts.filter(a => !a.completed).length;
+        const finalizadas = acts.filter(a => a.completed).length;
+        const totalFacturado = facts.reduce((s, f) => s + f.total, 0);
+        document.getElementById('kpiTotalClientes').innerText = clients.length;
+        document.getElementById('kpiActividadesActivas').innerText = activas;
+        document.getElementById('kpiActividadesFinalizadas').innerText = finalizadas;
+        document.getElementById('kpiTotalFacturado').innerText = `$${totalFacturado.toFixed(2)}`;
+        document.getElementById('kpiTotalProductos').innerText = prods.length;
+
+        const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const ingresosPorMes = new Array(12).fill(0);
+        facts.forEach(f => { if (f.fecha) ingresosPorMes[new Date(f.fecha).getMonth()] += f.total; });
+        if (ingresosChart) ingresosChart.destroy();
+        const ctx = document.getElementById('ingresosMensualesChart').getContext('2d');
+        ingresosChart = new Chart(ctx, { type: 'bar', data: { labels: meses, datasets: [{ label: 'Ingresos ($)', data: ingresosPorMes, backgroundColor: '#3b82f6' }] } });
+
+        const proximas = acts.filter(a => !a.completed && a.endDate && new Date(a.endDate) >= new Date()).sort((a, b) => new Date(a.endDate) - new Date(b.endDate)).slice(0, 5);
+        const container = document.getElementById('proximasActividadesList');
+        if (container) container.innerHTML = proximas.map(a => `<div class="bg-gray-50 p-2 rounded"><p class="font-semibold">${escapeHtml(a.description)}</p><p class="text-sm">Vence: ${a.endDate}</p></div>`).join('') || '<p>No hay próximas</p>';
+    }
+
+    let calendar = null;
+    async function renderCalendar() {
+        const acts = await getActivities();
+        const events = acts.map(act => ({ title: act.description?.substring(0, 30) || 'Orden', start: act.startDate || undefined, end: act.endDate || undefined, backgroundColor: act.completed ? '#10b981' : '#f59e0b', extendedProps: { id: act.id } }));
+        const calendarEl = document.getElementById('calendar');
+        if (calendar) calendar.destroy();
+        calendar = new FullCalendar.Calendar(calendarEl, { initialView: 'dayGridMonth', events, headerToolbar: { left: 'prev,next', center: 'title', right: 'dayGridMonth,timeGridWeek' }, eventClick: (info) => { if (confirm('Ver acta de inicio?')) viewActaInicio(info.event.extendedProps.id); } });
+        calendar.render();
+    }
+
+    async function renderPagosResumen() {
+        const acts = await getActivities();
+        const container = document.getElementById('pagosResumenContainer');
+        if (!container) return;
+        let html = '<div class="overflow-x-auto"><table class="min-w-full border"><thead><tr><th>Cliente</th><th>Orden</th><th>Total</th><th>Pagado</th><th>Pendiente</th></tr></thead><tbody>';
+        for (const act of acts) {
+            const client = currentClients.find(c => c.id === act.clientId);
+            const pagado = (act.paymentsMade || []).reduce((s, p) => s + p.amount, 0);
+            const totalAct = (act.total || 0) + (act.materiales || []).reduce((s, m) => s + m.cantidad * m.precioUnitario, 0);
+            const pendiente = totalAct - pagado;
+            html += `<tr><td>${client ? escapeHtml(client.name) : 'N/A'}</td><td>${escapeHtml(act.description)}</td><td>$${totalAct}</td><td>$${pagado}</td><td class="${pendiente > 0 ? 'text-red-600' : 'text-green-600'}">$${pendiente}</td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    document.getElementById('exportClientesExcel')?.addEventListener('click', async () => {
+        const clients = await getClients();
+        const ws = XLSX.utils.json_to_sheet(clients.map(c => ({ Nombre: c.name, Direccion: c.address, Telefono: c.phone, Email: c.email })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+        XLSX.writeFile(wb, 'clientes.xlsx');
+    });
+    document.getElementById('exportActividadesExcel')?.addEventListener('click', async () => {
+        const acts = await getActivities();
+        const ws = XLSX.utils.json_to_sheet(acts.map(a => ({ Descripcion: a.description, FechaInicio: a.startDate, FechaFin: a.endDate, TotalManoObra: a.total, Materiales: JSON.stringify(a.materiales), Finalizada: a.completed })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Ordenes');
+        XLSX.writeFile(wb, 'ordenes.xlsx');
+    });
+    document.getElementById('exportFacturasExcel')?.addEventListener('click', async () => {
+        const facts = await getFacturas();
+        const ws = XLSX.utils.json_to_sheet(facts.map(f => ({ Numero: f.numero, Fecha: f.fecha, Base: f.base, IVA: f.ivaPorcentaje, Total: f.total })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Facturas');
+        XLSX.writeFile(wb, 'facturas.xlsx');
+    });
+    document.getElementById('exportInventarioExcel')?.addEventListener('click', async () => {
+        const prods = await getProductos();
+        const ws = XLSX.utils.json_to_sheet(prods.map(p => ({ Producto: p.nombre, Stock: p.stock, Precio: p.precio })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+        XLSX.writeFile(wb, 'inventario.xlsx');
+    });
+
+    document.getElementById('btnExportData')?.addEventListener('click', async () => {
+        const data = { clients: await getClients(), activities: await getActivities(), facturas: await getFacturas(), productos: await getProductos(), movimientos: await getMovimientos() };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_${Date.now()}.json`;
+        a.click();
+    });
+    document.getElementById('btnImportData')?.addEventListener('click', () => document.getElementById('importFileInput').click());
+    document.getElementById('importFileInput')?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (!data.clients || !data.activities || !data.facturas || !data.productos) throw new Error('Formato inválido');
+                await clearAllData();
+                for (const c of data.clients) await saveClient(c);
+                for (const a of data.activities) await saveActivity(a);
+                for (const f of data.facturas) await saveFactura(f);
+                for (const p of data.productos) await saveProducto(p);
+                if (data.movimientos) for (const m of data.movimientos) await saveMovimiento(m);
+                await refreshAll();
+                alert('Importado correctamente');
+            } catch (err) {
+                alert('Archivo inválido');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+
+    function changeSection(sectionId) {
+        document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden-section'));
+        const activeSection = document.getElementById(`${sectionId}Section`);
+        if (!activeSection) {
+            console.error(`Sección no encontrada: ${sectionId}Section`);
+            return;
+        }
+        activeSection.classList.remove('hidden-section');
+        document.getElementById('mainTitle').innerText = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+        if (sectionId === 'dashboard') actualizarDashboard();
+        if (sectionId === 'calendario') renderCalendar();
+        if (sectionId === 'pagos') renderPagosResumen();
+        if (sectionId === 'clientes') renderClients();
+        if (sectionId === 'actividades') renderActivities();
+        if (sectionId === 'facturas') renderFacturas();
+        if (sectionId === 'inventario') renderInventario();
+    }
+
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const section = item.getAttribute('data-section');
+            if (!section) return;
+            changeSection(section);
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active-sidebar'));
+            item.classList.add('active-sidebar');
+        });
+    });
+
+    document.getElementById('btnAddClientTop')?.addEventListener('click', () => { changeSection('clientes'); document.getElementById('btnAddClient').click(); });
+    document.getElementById('btnNewActivityTop')?.addEventListener('click', () => { changeSection('actividades'); openActivityModal(null); });
+    document.getElementById('btnAddClient')?.addEventListener('click', () => {
+        document.getElementById('clientId').value = '';
+        document.getElementById('clientName').value = '';
+        document.getElementById('clientAddress').value = '';
+        document.getElementById('clientPhone').value = '';
+        document.getElementById('clientEmail').value = '';
+        document.getElementById('clientPhotoPreview').innerHTML = '<i class="fas fa-user text-3xl text-gray-500"></i>';
+        document.getElementById('clientPhoto').value = '';
+        document.getElementById('clientModalTitle').innerText = 'Nuevo Cliente';
+        document.getElementById('clientModal').classList.remove('hidden');
+    });
+
+    document.getElementById('saveClientBtn')?.addEventListener('click', async () => {
+        const name = document.getElementById('clientName').value.trim();
+        if (!name) return alert('Nombre requerido');
+        let photo = null;
+        if (document.getElementById('clientPhoto').files[0]) photo = await fileToBase64(document.getElementById('clientPhoto').files[0]);
+        const client = {
+            id: document.getElementById('clientId').value ? parseInt(document.getElementById('clientId').value, 10) : undefined,
+            name,
+            address: document.getElementById('clientAddress').value,
+            phone: document.getElementById('clientPhone').value,
+            email: document.getElementById('clientEmail').value,
+            photo
+        };
+        await saveClient(client);
+        document.getElementById('clientModal').classList.add('hidden');
+        await refreshAll();
+        if (!document.getElementById('clientesSection').classList.contains('hidden-section')) renderClients();
+    });
+
+    document.getElementById('closeClientModal')?.addEventListener('click', () => document.getElementById('clientModal').classList.add('hidden'));
+    document.getElementById('closeActivityModalBtn')?.addEventListener('click', () => document.getElementById('activityModal').classList.add('hidden'));
+    document.getElementById('closeActaModal')?.addEventListener('click', () => document.getElementById('actaModal').classList.add('hidden'));
+    document.getElementById('cancelCloseModal')?.addEventListener('click', () => document.getElementById('closeOrderModal').classList.add('hidden'));
+    document.getElementById('addPaymentMade')?.addEventListener('click', () => addPaymentRow(document.getElementById('paymentsMadeContainer')));
+    document.getElementById('addPendingPayment')?.addEventListener('click', () => addPaymentRow(document.getElementById('pendingPaymentsContainer')));
+    document.getElementById('addMaterialBtn')?.addEventListener('click', () => addMaterialRow(document.getElementById('materialesContainer')));
+    document.getElementById('searchClient')?.addEventListener('input', renderClients);
+    document.getElementById('filterClientActivity')?.addEventListener('change', renderActivities);
+    document.getElementById('sortActivities')?.addEventListener('change', renderActivities);
+    document.getElementById('guardarDatosEmpresa')?.addEventListener('click', guardarDatosEmpresaUI);
+    document.getElementById('btnAddProducto')?.addEventListener('click', () => {
+        document.getElementById('productoId').value = '';
+        document.getElementById('productoNombre').value = '';
+        document.getElementById('productoStock').value = '0';
+        document.getElementById('productoPrecio').value = '';
+        document.getElementById('productoModalTitle').innerText = 'Nuevo Producto';
+        document.getElementById('productoModal').classList.remove('hidden');
+    });
+    document.getElementById('saveProductoBtn')?.addEventListener('click', async () => {
+        const nombre = document.getElementById('productoNombre').value.trim();
+        if (!nombre) return alert('Nombre requerido');
+        const stock = parseInt(document.getElementById('productoStock').value, 10) || 0;
+        const precio = parseFloat(document.getElementById('productoPrecio').value) || 0;
+        const producto = { id: document.getElementById('productoId').value ? parseInt(document.getElementById('productoId').value, 10) : undefined, nombre, stock, precio };
+        await saveProducto(producto);
+        document.getElementById('productoModal').classList.add('hidden');
+        await refreshAll();
+        renderInventario();
+    });
+    document.getElementById('closeProductoModal')?.addEventListener('click', () => document.getElementById('productoModal').classList.add('hidden'));
+    document.getElementById('saveActivityBtn')?.addEventListener('click', saveActivityFromModal);
+
+    async function refreshAll() {
+        currentClients = await getClients();
+        currentActivities = await getActivities();
+        currentFacturas = await getFacturas();
+        currentProductos = await getProductos();
+        currentMovimientos = await getMovimientos();
+        await renderClients();
+        await renderActivities();
+        await renderFacturas();
+        await renderInventario();
+        await actualizarDashboard();
+        if (calendar) renderCalendar();
+        await renderPagosResumen();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+    }
+
+    (async () => {
+        dbPromise = initDB();
+        await dbPromise;
+        cargarDatosEmpresaUI();
+        await refreshAll();
+        changeSection('dashboard');
+        document.querySelector('.sidebar-item[data-section="dashboard"]').classList.add('active-sidebar');
+    })();
+</script>
+</body>
+</html>
