@@ -290,14 +290,13 @@
     };
 
     async function actualizarStock(productoId, cantidad, motivo, actividadId = null) {
-        const prod = currentProductos.find(p => p.id === productoId);
+        const prod = currentProductos.find(p => p.id === productoId) || (await getProductos()).find(p => p.id === productoId);
         if (!prod) return false;
         if (prod.stock + cantidad < 0) { alert(`Stock insuficiente para ${prod.nombre}`); return false; }
         prod.stock += cantidad;
         await saveProducto(prod);
         const movimiento = { productoId, productoNombre: prod.nombre, tipo: cantidad >= 0 ? 'Entrada' : 'Salida', cantidad: Math.abs(cantidad), stockFinal: prod.stock, fecha: new Date().toISOString().slice(0, 10), actividadId, motivo };
         await saveMovimiento(movimiento);
-        await refreshAll();
         return true;
     }
 
@@ -331,20 +330,59 @@
         }).filter(m => m.productoId && m.cantidad > 0);
     }
 
+    function agruparMaterialesPorProducto(materiales) {
+        const agrupado = new Map();
+        for (const m of (materiales || [])) {
+            const productoId = Number(m.productoId);
+            const cantidad = Number(m.cantidad) || 0;
+            if (!productoId || cantidad <= 0) continue;
+            agrupado.set(productoId, (agrupado.get(productoId) || 0) + cantidad);
+        }
+        return agrupado;
+    }
+
     async function aplicarMaterialesActivity(activityId, nuevosMateriales, oldMaterials) {
-        for (const old of oldMaterials) {
-            const stillExists = nuevosMateriales.some(m => m.productoId === old.productoId && m.cantidad === old.cantidad);
-            if (!stillExists) await actualizarStock(old.productoId, old.cantidad, 'Devolución por edición', activityId);
-        }
-        for (const mat of nuevosMateriales) {
-            const oldMat = oldMaterials.find(m => m.productoId === mat.productoId);
-            if (oldMat) {
-                const diff = mat.cantidad - oldMat.cantidad;
-                if (diff !== 0) await actualizarStock(mat.productoId, -diff, 'Ajuste materiales orden', activityId);
-            } else {
-                await actualizarStock(mat.productoId, -mat.cantidad, 'Consumo orden servicio', activityId);
+        const oldMap = agruparMaterialesPorProducto(oldMaterials);
+        const newMap = agruparMaterialesPorProducto(nuevosMateriales);
+        const productoIds = new Set([...oldMap.keys(), ...newMap.keys()]);
+        const ajustesAplicados = [];
+
+        for (const productoId of productoIds) {
+            const oldQty = oldMap.get(productoId) || 0;
+            const newQty = newMap.get(productoId) || 0;
+            const diff = newQty - oldQty;
+            if (diff === 0) continue;
+
+            const ajusteStock = -diff; // si aumenta consumo => stock negativo, si disminuye => devolución
+            const motivo = diff > 0 ? 'Ajuste materiales orden (consumo)' : 'Ajuste materiales orden (devolución)';
+            const ok = await actualizarStock(productoId, ajusteStock, motivo, activityId);
+            if (!ok) {
+                for (let i = ajustesAplicados.length - 1; i >= 0; i -= 1) {
+                    const aplicado = ajustesAplicados[i];
+                    await actualizarStock(aplicado.productoId, -aplicado.ajusteStock, 'Reversión de ajuste de materiales', activityId);
+                }
+                return false;
             }
+            ajustesAplicados.push({ productoId, ajusteStock });
         }
+        return true;
+    }
+
+    async function consumirMaterialesIniciales(materiales) {
+        const consumos = agruparMaterialesPorProducto(materiales);
+        const consumosAplicados = [];
+        for (const [productoId, cantidad] of consumos.entries()) {
+            const ok = await actualizarStock(productoId, -cantidad, 'Consumo orden servicio', null);
+            if (!ok) {
+                for (let i = consumosAplicados.length - 1; i >= 0; i -= 1) {
+                    const aplicado = consumosAplicados[i];
+                    await actualizarStock(aplicado.productoId, aplicado.cantidad, 'Reversión de consumo por error', null);
+                }
+                return false;
+            }
+            consumosAplicados.push({ productoId, cantidad });
+        }
+        return true;
     }
 
     async function renderActivities() {
@@ -362,10 +400,11 @@
             const client = clients.find(c => c.id === act.clientId);
             const status = act.completed ? 'Finalizada' : 'En progreso';
             const statusColor = act.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
-            const totalPaid = (act.paymentsMade || []).reduce((s, p) => s + (p.amount || 0), 0);
-            const costoMateriales = (act.materiales || []).reduce((sum, m) => sum + (m.cantidad * m.precioUnitario), 0);
-            const totalFinal = (act.total || 0) + costoMateriales;
-            return `<div class="border rounded-lg p-4 shadow-sm"><div class="flex flex-wrap justify-between"><div><span class="font-bold">${escapeHtml(act.description || '')}</span><span class="ml-2 px-2 py-0.5 rounded-full text-xs ${statusColor}">${status}</span></div><div><button onclick="viewActaInicio(${act.id})" class="text-indigo-600 text-sm mr-2"><i class="fas fa-file-signature"></i> Acta Inicio</button>${!act.completed ? `<button onclick="openEditActivity(${act.id})" class="text-blue-600 text-sm mr-2"><i class="fas fa-pen"></i> Editar</button><button onclick="prepareCloseActivity(${act.id})" class="text-red-600 text-sm mr-2"><i class="fas fa-clipboard-check"></i> Cerrar</button>` : `<button onclick="viewActaFin(${act.id})" class="text-purple-600 text-sm mr-2"><i class="fas fa-check-circle"></i> Acta Fin</button><button onclick="reopenActivity(${act.id})" class="text-orange-600 text-sm mr-2"><i class="fas fa-undo-alt"></i> Reabrir</button>`}<button onclick="facturarActividad(${act.id})" class="text-green-600 text-sm mr-2"><i class="fas fa-file-invoice"></i> Facturar</button><button onclick="deleteActivityAction(${act.id})" class="text-gray-500 text-sm"><i class="fas fa-trash"></i></button></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mt-2 text-gray-600"><div>Inicio: ${act.startDate || '—'}</div><div>Fin: ${act.endDate || '—'}</div><div>Mano Obra: $${act.total || 0}</div><div>Materiales: $${costoMateriales}</div><div>Total: $${totalFinal}</div><div>Pagado: $${totalPaid}</div><div>Cliente: ${client ? escapeHtml(client.name) : 'N/A'}</div></div></div>`;
+            const manoObra = Number(act.total) || 0;
+            const totalPaid = (act.paymentsMade || []).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+            const costoMateriales = (act.materiales || []).reduce((sum, m) => sum + (Number(m.cantidad) || 0) * (Number(m.precioUnitario) || 0), 0);
+            const totalFinal = manoObra + costoMateriales;
+            return `<div class="border rounded-lg p-4 shadow-sm"><div class="flex flex-wrap justify-between"><div><span class="font-bold">${escapeHtml(act.description || '')}</span><span class="ml-2 px-2 py-0.5 rounded-full text-xs ${statusColor}">${status}</span></div><div><button onclick="viewActaInicio(${act.id})" class="text-indigo-600 text-sm mr-2"><i class="fas fa-file-signature"></i> Acta Inicio</button>${!act.completed ? `<button onclick="openEditActivity(${act.id})" class="text-blue-600 text-sm mr-2"><i class="fas fa-pen"></i> Editar</button><button onclick="prepareCloseActivity(${act.id})" class="text-red-600 text-sm mr-2"><i class="fas fa-clipboard-check"></i> Cerrar</button>` : `<button onclick="viewActaFin(${act.id})" class="text-purple-600 text-sm mr-2"><i class="fas fa-check-circle"></i> Acta Fin</button><button onclick="reopenActivity(${act.id})" class="text-orange-600 text-sm mr-2"><i class="fas fa-undo-alt"></i> Reabrir</button>`}<button onclick="facturarActividad(${act.id})" class="text-green-600 text-sm mr-2"><i class="fas fa-file-invoice"></i> Facturar</button><button onclick="deleteActivityAction(${act.id})" class="text-gray-500 text-sm"><i class="fas fa-trash"></i></button></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mt-2 text-gray-600"><div>Inicio: ${act.startDate || '—'}</div><div>Fin: ${act.endDate || '—'}</div><div>Mano Obra: $${manoObra}</div><div>Materiales: $${costoMateriales}</div><div>Total: $${totalFinal}</div><div>Pagado: $${totalPaid}</div><div>Cliente: ${client ? escapeHtml(client.name) : 'N/A'}</div></div></div>`;
         }).join('');
     }
 
@@ -492,9 +531,22 @@
             };
             if (id) {
                 const old = currentActivities.find(a => a.id == id);
-                if (old) { activity.completed = old.completed; await aplicarMaterialesActivity(parseInt(id, 10), materiales, old.materiales || []); }
+                if (old) {
+                    activity.completed = old.completed;
+                    activity.completionSignature = old.completionSignature || null;
+                    activity.completionDate = old.completionDate || null;
+                    const ok = await aplicarMaterialesActivity(parseInt(id, 10), materiales, old.materiales || []);
+                    if (!ok) {
+                        alert('No se pudo actualizar materiales por falta de stock.');
+                        return;
+                    }
+                }
             } else {
-                for (const mat of materiales) await actualizarStock(mat.productoId, -mat.cantidad, 'Consumo orden servicio', null);
+                const ok = await consumirMaterialesIniciales(materiales);
+                if (!ok) {
+                    alert('No se pudo guardar la orden por falta de stock.');
+                    return;
+                }
             }
             await saveActivity(activity);
             document.getElementById('activityModal').classList.add('hidden');
@@ -565,14 +617,17 @@
         if (act.completed) { alert('Ya cerrada'); return; }
         currentActivityForClosing = act;
         const client = currentClients.find(c => c.id === act.clientId);
-        const costoMateriales = (act.materiales || []).reduce((s, m) => s + m.cantidad * m.precioUnitario, 0);
-        document.getElementById('closeActivityInfo').innerHTML = `<strong>${escapeHtml(act.description)}</strong><br>Cliente: ${client?.name}<br>Total Mano Obra: $${act.total}<br>Materiales: $${costoMateriales}`;
-        const canvas = document.getElementById('signatureCanvas');
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
-        if (signaturePad) signaturePad.clear();
-        signaturePad = new SignaturePad(canvas, { backgroundColor: 'white' });
+        const costoMateriales = (act.materiales || []).reduce((s, m) => s + (Number(m.cantidad) || 0) * (Number(m.precioUnitario) || 0), 0);
+        const manoObra = Number(act.total) || 0;
+        document.getElementById('closeActivityInfo').innerHTML = `<strong>${escapeHtml(act.description)}</strong><br>Cliente: ${client?.name}<br>Total Mano Obra: $${manoObra}<br>Materiales: $${costoMateriales}`;
         document.getElementById('closeOrderModal').classList.remove('hidden');
+        const canvas = document.getElementById('signatureCanvas');
+        requestAnimationFrame(() => {
+            canvas.width = canvas.offsetWidth || 400;
+            canvas.height = 180;
+            if (signaturePad) signaturePad.clear();
+            signaturePad = new SignaturePad(canvas, { backgroundColor: 'white' });
+        });
     };
 
     document.getElementById('clearSignatureBtn').onclick = () => signaturePad?.clear();
@@ -593,8 +648,8 @@
         if (!act) return;
         actividadParaFacturar = act;
         const client = currentClients.find(c => c.id === act.clientId);
-        const costoMateriales = (act.materiales || []).reduce((s, m) => s + m.cantidad * m.precioUnitario, 0);
-        const baseManoObra = act.total || 0;
+        const costoMateriales = (act.materiales || []).reduce((s, m) => s + (Number(m.cantidad) || 0) * (Number(m.precioUnitario) || 0), 0);
+        const baseManoObra = Number(act.total) || 0;
         const baseTotal = baseManoObra + costoMateriales;
         document.getElementById('facturarActividadInfo').innerHTML = `Orden: ${escapeHtml(act.description)}<br>Cliente: ${client?.name}<br>Mano Obra: $${baseManoObra}<br>Materiales: $${costoMateriales}`;
         const facturas = await getFacturas();
@@ -710,8 +765,8 @@
         let html = '<div class="overflow-x-auto"><table class="min-w-full border"><thead><tr><th>Cliente</th><th>Orden</th><th>Total</th><th>Pagado</th><th>Pendiente</th></tr></thead><tbody>';
         for (const act of acts) {
             const client = currentClients.find(c => c.id === act.clientId);
-            const pagado = (act.paymentsMade || []).reduce((s, p) => s + p.amount, 0);
-            const totalAct = (act.total || 0) + (act.materiales || []).reduce((s, m) => s + m.cantidad * m.precioUnitario, 0);
+            const pagado = (act.paymentsMade || []).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+            const totalAct = (Number(act.total) || 0) + (act.materiales || []).reduce((s, m) => s + (Number(m.cantidad) || 0) * (Number(m.precioUnitario) || 0), 0);
             const pendiente = totalAct - pagado;
             html += `<tr><td>${client ? escapeHtml(client.name) : 'N/A'}</td><td>${escapeHtml(act.description)}</td><td>$${totalAct}</td><td>$${pagado}</td><td class="${pendiente > 0 ? 'text-red-600' : 'text-green-600'}">$${pendiente}</td></tr>`;
         }
@@ -826,10 +881,15 @@
     document.getElementById('saveClientBtn')?.addEventListener('click', async () => {
         const name = document.getElementById('clientName').value.trim();
         if (!name) return alert('Nombre requerido');
+        const clientId = document.getElementById('clientId').value ? parseInt(document.getElementById('clientId').value, 10) : undefined;
         let photo = null;
         if (document.getElementById('clientPhoto').files[0]) photo = await fileToBase64(document.getElementById('clientPhoto').files[0]);
+        else if (clientId) {
+            const existing = currentClients.find(c => c.id === clientId);
+            photo = existing?.photo || null;
+        }
         const client = {
-            id: document.getElementById('clientId').value ? parseInt(document.getElementById('clientId').value, 10) : undefined,
+            id: clientId,
             name,
             address: document.getElementById('clientAddress').value,
             phone: document.getElementById('clientPhone').value,
