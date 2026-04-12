@@ -28,6 +28,14 @@
         .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; margin-left: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .toast-container { position: fixed; top: 16px; right: 16px; z-index: 10001; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { min-width: 260px; max-width: 420px; border-radius: 10px; color: #fff; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2); transform: translateY(-8px); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease; pointer-events: auto; }
+        .toast-show { transform: translateY(0); opacity: 1; }
+        .toast-success { background: #16a34a; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; color: #111827; }
+        .toast-info { background: #2563eb; }
+        .toast-close { margin-left: auto; border: none; background: transparent; color: inherit; font-size: 16px; cursor: pointer; line-height: 1; }
         @media print {
             .no-print { display: none !important; }
             .print-acta, .print-factura { padding: 1.5rem; font-size: 14pt; background: white; }
@@ -161,7 +169,7 @@
         empresaData.email = document.getElementById('empresaEmail').value;
         empresaData.iva = parseFloat(document.getElementById('empresaIva').value) || 21;
         for (const k in empresaData) localStorage.setItem(`empresa${k.charAt(0).toUpperCase() + k.slice(1)}`, empresaData[k]);
-        alert('Datos guardados');
+        showToast('Datos guardados', 'success');
     }
 
     function cargarDatosEmpresaUI() {
@@ -223,6 +231,38 @@
         button.classList.toggle('opacity-70', isLoading);
         button.classList.toggle('cursor-not-allowed', isLoading);
         button.innerHTML = isLoading ? loadingHtml : button.dataset.originalHtml;
+    }
+
+    function showToast(message, type = 'info', timeout = 3200) {
+        if (!message) return;
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        const safeType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
+        const iconByType = {
+            success: 'fa-check-circle',
+            error: 'fa-circle-exclamation',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        toast.className = `toast toast-${safeType}`;
+        toast.innerHTML = `<i class="fas ${iconByType[safeType]}"></i><span class="toast-message"></span><button class="toast-close" aria-label="Cerrar">×</button>`;
+        toast.querySelector('.toast-message').textContent = String(message);
+
+        const removeToast = () => {
+            toast.classList.remove('toast-show');
+            setTimeout(() => toast.remove(), 220);
+        };
+
+        toast.querySelector('.toast-close')?.addEventListener('click', removeToast);
+        container.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('toast-show'));
+        setTimeout(removeToast, timeout);
     }
 
     async function renderClients() {
@@ -307,7 +347,7 @@
         const prod = currentProductos.find(p => p.id === productoId) || (await getProductos()).find(p => p.id === productoId);
         if (!prod) return false;
         if (!Number.isFinite(cantidad) || cantidad === 0) return true;
-        if (prod.stock + cantidad < 0) { alert(`Stock insuficiente para ${prod.nombre}`); return false; }
+        if (prod.stock + cantidad < 0) { showToast(`Stock insuficiente para ${prod.nombre}`, 'error'); return false; }
         prod.stock += cantidad;
         await saveProducto(prod);
         const movimiento = { productoId, productoNombre: prod.nombre, tipo: cantidad >= 0 ? 'Entrada' : 'Salida', cantidad: Math.abs(cantidad), stockFinal: prod.stock, fecha: new Date().toISOString().slice(0, 10), actividadId, motivo };
@@ -426,7 +466,7 @@
     window.openEditActivity = async (id) => {
         const act = currentActivities.find(a => a.id === id);
         if (act && !act.completed) await openActivityModal(act);
-        else alert('No editable si finalizada');
+        else showToast('No editable si finalizada', 'warning');
     };
 
     window.deleteActivityAction = async (id) => {
@@ -448,7 +488,7 @@
         act.completionDate = null;
         await saveActivity(act);
         await refreshAll();
-        alert('Reabierta');
+        showToast('Orden reabierta', 'success');
     };
 
     async function openActivityModal(activity = null) {
@@ -516,14 +556,14 @@
         const clientId = parseInt(document.getElementById('activityClientId').value, 10);
         const description = document.getElementById('activityDescription').value.trim();
         const startDate = document.getElementById('activityStartDate').value;
-        if (!clientId || !description || !startDate) { alert('Complete cliente, descripción y fecha de inicio'); return; }
+        if (!clientId || !description || !startDate) { showToast('Complete cliente, descripción y fecha de inicio', 'warning'); return; }
 
         setButtonLoading(saveBtn, true, '<i class="fas fa-spinner fa-spin"></i> Guardando...');
         showLoading(true);
         try {
             const currentPhotos = Array.from(document.querySelectorAll('#photosPreview .photo-item img')).map(img => img.src);
             const newFiles = document.getElementById('activityPhotos').files;
-            if (currentPhotos.length + newFiles.length > 5) { alert('Máximo 5 fotos'); showLoading(false); return; }
+            if (currentPhotos.length + newFiles.length > 5) { showToast('Máximo 5 fotos', 'warning'); showLoading(false); return; }
             for (const file of newFiles) currentPhotos.push(await compressImage(file));
 
             const paymentsMade = collectPayments(document.getElementById('paymentsMadeContainer'));
@@ -555,20 +595,21 @@
                     activity.completionDate = old.completionDate || null;
                     const ok = await aplicarMaterialesActivity(parseInt(id, 10), materiales, old.materiales || []);
                     if (!ok) {
-                        alert('No se pudo actualizar materiales por falta de stock.');
+                        showToast('No se pudo actualizar materiales por falta de stock.', 'error');
                         return;
                     }
                 }
             } else {
                 const ok = await consumirMaterialesIniciales(materiales);
                 if (!ok) {
-                    alert('No se pudo guardar la orden por falta de stock.');
+                    showToast('No se pudo guardar la orden por falta de stock.', 'error');
                     return;
                 }
             }
             await saveActivity(activity);
             document.getElementById('activityModal').classList.add('hidden');
             await refreshAll();
+            showToast('Orden guardada correctamente', 'success');
         } finally {
             showLoading(false);
             setButtonLoading(saveBtn, false, '');
@@ -592,7 +633,7 @@
 
     async function viewActaInicio(actId) {
         const act = currentActivities.find(a => a.id === actId);
-        if (!act) { alert('Orden no encontrada'); return; }
+        if (!act) { showToast('Orden no encontrada', 'error'); return; }
         const client = currentClients.find(c => c.id === act.clientId);
         const manoObra = Number(act.total) || 0;
         const clientName = client?.name ? escapeHtml(client.name) : 'N/A';
@@ -608,8 +649,8 @@
 
     async function viewActaFin(actId) {
         const act = currentActivities.find(a => a.id === actId);
-        if (!act) { alert('Orden no encontrada'); return; }
-        if (!act.completed) { alert('No finalizada'); return; }
+        if (!act) { showToast('Orden no encontrada', 'error'); return; }
+        if (!act.completed) { showToast('La orden no está finalizada', 'warning'); return; }
         const client = currentClients.find(c => c.id === act.clientId);
         const clientName = client?.name ? escapeHtml(client.name) : 'N/A';
         const signatureImg = act.completionSignature ? `<img src="${act.completionSignature}" style="max-width:200px;">` : '<p>Sin firma</p>';
@@ -647,7 +688,7 @@
 
     window.prepareCloseActivity = async (actId) => {
         const act = currentActivities.find(a => a.id === actId);
-        if (act.completed) { alert('Ya cerrada'); return; }
+        if (act.completed) { showToast('La orden ya está cerrada', 'warning'); return; }
         currentActivityForClosing = act;
         const client = currentClients.find(c => c.id === act.clientId);
         const costoMateriales = (act.materiales || []).reduce((s, m) => s + (Number(m.cantidad) || 0) * (Number(m.precioUnitario) || 0), 0);
@@ -666,14 +707,14 @@
 
     document.getElementById('clearSignatureBtn').onclick = () => signaturePad?.clear();
     document.getElementById('confirmCloseActivity').onclick = async () => {
-        if (!signaturePad || signaturePad.isEmpty()) { alert('Firma requerida'); return; }
+        if (!signaturePad || signaturePad.isEmpty()) { showToast('Firma requerida', 'warning'); return; }
         currentActivityForClosing.completed = true;
         currentActivityForClosing.completionSignature = signaturePad.toDataURL();
         currentActivityForClosing.completionDate = new Date().toISOString().split('T')[0];
         await saveActivity(currentActivityForClosing);
         document.getElementById('closeOrderModal').classList.add('hidden');
         await refreshAll();
-        alert('Acta de Fin generada');
+        showToast('Acta de fin generada', 'success');
     };
 
     let actividadParaFacturar = null;
@@ -683,7 +724,7 @@
         const facturas = await getFacturas();
         const existingFactura = facturas.find(f => Number(f.actividadId) === Number(act.id));
         if (existingFactura) {
-            alert(`Esta orden ya tiene una factura emitida (${existingFactura.numero || 'sin número'}).`);
+            showToast(`Esta orden ya tiene una factura emitida (${existingFactura.numero || 'sin número'}).`, 'warning');
             return;
         }
         actividadParaFacturar = act;
@@ -718,9 +759,9 @@
         if (emitBtn?.disabled) return;
         if (!actividadParaFacturar) return;
         const fechaFactura = document.getElementById('facturaFecha').value;
-        if (!fechaFactura) { alert('La fecha de factura es obligatoria.'); return; }
+        if (!fechaFactura) { showToast('La fecha de factura es obligatoria.', 'warning'); return; }
         const existing = (await getFacturas()).find(f => Number(f.actividadId) === Number(actividadParaFacturar.id));
-        if (existing) { alert(`Ya existe una factura para esta orden: ${existing.numero || 'sin número'}`); return; }
+        if (existing) { showToast(`Ya existe una factura para esta orden: ${existing.numero || 'sin número'}`, 'warning'); return; }
         setButtonLoading(emitBtn, true, '<i class="fas fa-spinner fa-spin"></i> Emitiendo...');
         const ivaVal = Math.max(0, Math.min(100, parseFloat(document.getElementById('facturaIvaPorcentaje').value) || 0));
         document.getElementById('facturaIvaPorcentaje').value = ivaVal;
@@ -741,7 +782,7 @@
             await saveFactura(factura);
             document.getElementById('facturarModal').classList.add('hidden');
             await refreshAll();
-            alert(`Factura ${factura.numero} emitida`);
+            showToast(`Factura ${factura.numero} emitida`, 'success');
         } finally {
             setButtonLoading(emitBtn, false, '');
         }
@@ -894,9 +935,9 @@
                 for (const p of data.productos) await saveProducto(p);
                 if (data.movimientos) for (const m of data.movimientos) await saveMovimiento(m);
                 await refreshAll();
-                alert('Importado correctamente');
+                showToast('Importado correctamente', 'success');
             } catch (err) {
-                alert('Archivo inválido');
+                showToast('Archivo inválido', 'error');
             }
         };
         reader.readAsText(file);
@@ -949,7 +990,7 @@
         const saveBtn = document.getElementById('saveClientBtn');
         if (saveBtn?.disabled) return;
         const name = document.getElementById('clientName').value.trim();
-        if (!name) return alert('Nombre requerido');
+        if (!name) { showToast('Nombre requerido', 'warning'); return; }
         setButtonLoading(saveBtn, true, '<i class="fas fa-spinner fa-spin"></i> Guardando...');
         const clientId = document.getElementById('clientId').value ? parseInt(document.getElementById('clientId').value, 10) : undefined;
         let photo = null;
@@ -971,6 +1012,7 @@
             document.getElementById('clientModal').classList.add('hidden');
             await refreshAll();
             if (!document.getElementById('clientesSection').classList.contains('hidden-section')) renderClients();
+            showToast(clientId ? 'Cliente actualizado' : 'Cliente creado', 'success');
         } finally {
             setButtonLoading(saveBtn, false, '');
         }
@@ -999,7 +1041,7 @@
         const saveBtn = document.getElementById('saveProductoBtn');
         if (saveBtn?.disabled) return;
         const nombre = document.getElementById('productoNombre').value.trim();
-        if (!nombre) return alert('Nombre requerido');
+        if (!nombre) { showToast('Nombre requerido', 'warning'); return; }
         setButtonLoading(saveBtn, true, '<i class="fas fa-spinner fa-spin"></i> Guardando...');
         const stock = parseInt(document.getElementById('productoStock').value, 10) || 0;
         const precio = parseFloat(document.getElementById('productoPrecio').value) || 0;
@@ -1009,6 +1051,7 @@
             document.getElementById('productoModal').classList.add('hidden');
             await refreshAll();
             renderInventario();
+            showToast(producto.id ? 'Producto actualizado' : 'Producto creado', 'success');
         } finally {
             setButtonLoading(saveBtn, false, '');
         }
