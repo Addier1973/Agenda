@@ -114,6 +114,7 @@
 <div class="flex justify-end gap-3 mt-6"><button id="closeActivityModalBtn" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="saveActivityBtn" class="px-4 py-2 bg-green-600 text-white rounded">Guardar Orden</button></div></div></div>
 <div id="closeOrderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold">Finalizar Orden</h3><div id="closeActivityInfo" class="bg-gray-50 p-3 rounded my-3 text-sm"></div><canvas id="signatureCanvas" width="400" height="180" class="signature-canvas"></canvas><div class="flex gap-2 mt-2"><button id="clearSignatureBtn" class="text-xs bg-gray-200 px-2 py-1 rounded">Limpiar</button></div><div class="flex justify-end gap-3 mt-5"><button id="cancelCloseModal" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="confirmCloseActivity" class="px-4 py-2 bg-red-600 text-white rounded">Generar Acta de Fin</button></div></div></div>
 <div id="actaModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-2xl p-6 relative"><div id="actaContent"></div><div class="flex justify-end gap-3 mt-4 no-print"><button id="closeActaModal" class="px-4 py-2 bg-gray-300 rounded">Cerrar</button><button id="printActaBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Imprimir</button><button id="downloadPdfBtn" class="px-4 py-2 bg-green-600 text-white rounded">Descargar PDF</button></div></div></div>
+<div id="facturaPreviewModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-4xl p-6 relative"><h3 class="text-xl font-bold mb-4">Vista previa de factura</h3><div id="facturaPreviewContent" class="max-h-[70vh] overflow-y-auto border rounded p-4 bg-white"></div><div class="flex justify-end gap-3 mt-4 no-print"><button id="closeFacturaPreviewModal" class="px-4 py-2 bg-gray-300 rounded">Cerrar</button><button id="printFacturaPreviewBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Imprimir</button><button id="downloadFacturaPdfBtn" class="px-4 py-2 bg-green-600 text-white rounded">Descargar PDF</button></div></div></div>
 <div id="facturarModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-2xl p-6"><h3 class="text-xl font-bold">Emitir Factura</h3><p id="facturarActividadInfo" class="text-gray-500 mb-4"></p><div class="grid grid-cols-2 gap-3"><div><label>N° Factura</label><input type="text" id="facturaNumero" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Fecha</label><input type="date" id="facturaFecha" class="border p-2 rounded w-full"></div><div><label>Base Mano Obra</label><input type="number" id="facturaBaseManoObra" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Base Materiales</label><input type="number" id="facturaBaseMateriales" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Base Imponible</label><input type="number" id="facturaBase" step="0.01" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>IVA %</label><input type="number" id="facturaIvaPorcentaje" step="0.1" class="border p-2 rounded w-full"></div><div class="col-span-2"><label>Total Factura</label><input type="number" id="facturaTotal" step="0.01" readonly class="border bg-gray-100 p-2 rounded w-full"></div></div><div class="flex justify-end gap-3 mt-5"><button id="cancelFacturarModal" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="confirmEmitirFactura" class="px-4 py-2 bg-green-600 text-white rounded">Emitir Factura</button></div></div></div>
 <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-md p-6"><div class="flex gap-3"><div id="confirmIconWrap" class="confirm-icon confirm-warning"><i id="confirmIcon" class="fas fa-triangle-exclamation"></i></div><div><h3 id="confirmTitle" class="text-lg font-bold text-gray-800">Confirmar acción</h3><p id="confirmMessage" class="text-sm text-gray-600 mt-1"></p></div></div><div class="flex justify-end gap-3 mt-6"><button id="confirmCancelBtn" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button><button id="confirmAcceptBtn" class="px-4 py-2 bg-amber-600 text-white rounded">Confirmar</button></div></div></div>
 
@@ -861,9 +862,10 @@
         }).join('');
     }
 
-    window.verFacturaPDF = async (factId) => {
-        const fact = currentFacturas.find(f => f.id === factId);
-        if (!fact) return;
+    let currentFacturaPreviewHtml = '';
+    let currentFacturaPreviewNumero = '';
+
+    function buildFacturaHtml(fact) {
         const client = currentClients.find(c => c.id === fact.clientId);
         const actividad = currentActivities.find(a => a.id === fact.actividadId);
         const baseManoObra = Number(fact.baseManoObra) || 0;
@@ -871,11 +873,16 @@
         const base = Number(fact.base) || 0;
         const ivaPorcentaje = Number(fact.ivaPorcentaje) || 0;
         const total = Number(fact.total) || 0;
-        const html = `<div class="print-factura" style="font-family:sans-serif; padding:20px;"><div style="text-align:right;"><h2>FACTURA</h2><p>${fact.numero}</p><p>Fecha: ${fact.fecha}</p></div><div><strong>EMPRESA:</strong><br>${empresaData.nombre}<br>${empresaData.nif}<br>${empresaData.direccion}</div><div><strong>CLIENTE:</strong><br>${client?.name}<br>${client?.address}</div><div><strong>Concepto:</strong> ${actividad?.description}</div><table border="1" cellpadding="5" style="width:100%; border-collapse:collapse;"><tr><th>Detalle</th><th>Importe</th></tr><tr><td>Mano de obra</td><td>$${baseManoObra.toFixed(2)}</td></tr><tr><td>Materiales</td><td>$${baseMateriales.toFixed(2)}</td></tr><tr><td>Base imponible</td><td>$${base.toFixed(2)}</td></tr><tr><td>IVA ${ivaPorcentaje}%</td><td>$${(base * ivaPorcentaje / 100).toFixed(2)}</td></tr><tr><td><strong>TOTAL</strong></td><td><strong>$${total.toFixed(2)}</strong></td></tr></table><div class="mt-4 text-center">Documento generado electrónicamente</div></div>`;
-        const ventana = window.open();
-        ventana.document.write(html);
-        ventana.document.close();
-        ventana.print();
+        return `<div class="print-factura bg-white" style="font-family:sans-serif; padding:20px;"><div style="text-align:right;"><h2>FACTURA</h2><p>${escapeHtml(fact.numero || 'SIN-NUMERO')}</p><p>Fecha: ${escapeHtml(fact.fecha || '')}</p></div><div><strong>EMPRESA:</strong><br>${escapeHtml(empresaData.nombre || '')}<br>${escapeHtml(empresaData.nif || '')}<br>${escapeHtml(empresaData.direccion || '')}</div><div style="margin-top:10px;"><strong>CLIENTE:</strong><br>${escapeHtml(client?.name || '')}<br>${escapeHtml(client?.address || '')}</div><div style="margin-top:10px;"><strong>Concepto:</strong> ${escapeHtml(actividad?.description || 'Servicio')}</div><table border="1" cellpadding="5" style="width:100%; border-collapse:collapse; margin-top:12px;"><tr><th>Detalle</th><th>Importe</th></tr><tr><td>Mano de obra</td><td>$${baseManoObra.toFixed(2)}</td></tr><tr><td>Materiales</td><td>$${baseMateriales.toFixed(2)}</td></tr><tr><td>Base imponible</td><td>$${base.toFixed(2)}</td></tr><tr><td>IVA ${ivaPorcentaje}%</td><td>$${(base * ivaPorcentaje / 100).toFixed(2)}</td></tr><tr><td><strong>TOTAL</strong></td><td><strong>$${total.toFixed(2)}</strong></td></tr></table><div class="mt-4 text-center">Documento generado electrónicamente</div></div>`;
+    }
+
+    window.verFacturaPDF = async (factId) => {
+        const fact = currentFacturas.find(f => f.id === factId);
+        if (!fact) return;
+        currentFacturaPreviewHtml = buildFacturaHtml(fact);
+        currentFacturaPreviewNumero = (fact.numero || `factura_${fact.id || Date.now()}`).replace(/[^\w-]+/g, '_');
+        document.getElementById('facturaPreviewContent').innerHTML = currentFacturaPreviewHtml;
+        document.getElementById('facturaPreviewModal').classList.remove('hidden');
     };
 
     window.eliminarFactura = async (id) => {
@@ -1081,6 +1088,37 @@
     document.getElementById('closeClientModal')?.addEventListener('click', () => document.getElementById('clientModal').classList.add('hidden'));
     document.getElementById('closeActivityModalBtn')?.addEventListener('click', () => document.getElementById('activityModal').classList.add('hidden'));
     document.getElementById('closeActaModal')?.addEventListener('click', () => document.getElementById('actaModal').classList.add('hidden'));
+    document.getElementById('closeFacturaPreviewModal')?.addEventListener('click', () => document.getElementById('facturaPreviewModal').classList.add('hidden'));
+    document.getElementById('printFacturaPreviewBtn')?.addEventListener('click', () => {
+        if (!currentFacturaPreviewHtml) return;
+        const ventana = window.open('', '_blank');
+        if (!ventana) { showToast('Tu navegador bloqueó la ventana de impresión.', 'warning'); return; }
+        ventana.document.write(`<html><head><title>Factura</title></head><body>${currentFacturaPreviewHtml}</body></html>`);
+        ventana.document.close();
+        ventana.focus();
+        ventana.print();
+    });
+    document.getElementById('downloadFacturaPdfBtn')?.addEventListener('click', async () => {
+        if (!currentFacturaPreviewHtml) return;
+        const btn = document.getElementById('downloadFacturaPdfBtn');
+        setButtonLoading(btn, true, '<i class="fas fa-spinner fa-spin"></i> Generando...');
+        try {
+            const element = document.getElementById('facturaPreviewContent');
+            const canvas = await html2canvas(element, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            pdf.save(`${currentFacturaPreviewNumero || `factura_${Date.now()}`}.pdf`);
+            showToast('PDF de factura descargado', 'success');
+        } catch (err) {
+            showToast('No se pudo generar el PDF de factura', 'error');
+        } finally {
+            setButtonLoading(btn, false, '');
+        }
+    });
     document.getElementById('cancelCloseModal')?.addEventListener('click', () => document.getElementById('closeOrderModal').classList.add('hidden'));
     document.getElementById('confirmCancelBtn')?.addEventListener('click', () => closeConfirmModal(false));
     document.getElementById('confirmAcceptBtn')?.addEventListener('click', () => closeConfirmModal(true));
