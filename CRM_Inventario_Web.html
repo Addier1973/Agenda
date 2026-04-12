@@ -36,6 +36,10 @@
         .toast-warning { background: #f59e0b; color: #111827; }
         .toast-info { background: #2563eb; }
         .toast-close { margin-left: auto; border: none; background: transparent; color: inherit; font-size: 16px; cursor: pointer; line-height: 1; }
+        .confirm-icon { width: 36px; height: 36px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+        .confirm-warning { background: #fef3c7; color: #92400e; }
+        .confirm-danger { background: #fee2e2; color: #991b1b; }
+        .confirm-info { background: #dbeafe; color: #1e3a8a; }
         @media print {
             .no-print { display: none !important; }
             .print-acta, .print-factura { padding: 1.5rem; font-size: 14pt; background: white; }
@@ -111,6 +115,7 @@
 <div id="closeOrderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold">Finalizar Orden</h3><div id="closeActivityInfo" class="bg-gray-50 p-3 rounded my-3 text-sm"></div><canvas id="signatureCanvas" width="400" height="180" class="signature-canvas"></canvas><div class="flex gap-2 mt-2"><button id="clearSignatureBtn" class="text-xs bg-gray-200 px-2 py-1 rounded">Limpiar</button></div><div class="flex justify-end gap-3 mt-5"><button id="cancelCloseModal" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="confirmCloseActivity" class="px-4 py-2 bg-red-600 text-white rounded">Generar Acta de Fin</button></div></div></div>
 <div id="actaModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-2xl p-6 relative"><div id="actaContent"></div><div class="flex justify-end gap-3 mt-4 no-print"><button id="closeActaModal" class="px-4 py-2 bg-gray-300 rounded">Cerrar</button><button id="printActaBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Imprimir</button><button id="downloadPdfBtn" class="px-4 py-2 bg-green-600 text-white rounded">Descargar PDF</button></div></div></div>
 <div id="facturarModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-2xl p-6"><h3 class="text-xl font-bold">Emitir Factura</h3><p id="facturarActividadInfo" class="text-gray-500 mb-4"></p><div class="grid grid-cols-2 gap-3"><div><label>N° Factura</label><input type="text" id="facturaNumero" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Fecha</label><input type="date" id="facturaFecha" class="border p-2 rounded w-full"></div><div><label>Base Mano Obra</label><input type="number" id="facturaBaseManoObra" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Base Materiales</label><input type="number" id="facturaBaseMateriales" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>Base Imponible</label><input type="number" id="facturaBase" step="0.01" readonly class="border bg-gray-100 p-2 rounded w-full"></div><div><label>IVA %</label><input type="number" id="facturaIvaPorcentaje" step="0.1" class="border p-2 rounded w-full"></div><div class="col-span-2"><label>Total Factura</label><input type="number" id="facturaTotal" step="0.01" readonly class="border bg-gray-100 p-2 rounded w-full"></div></div><div class="flex justify-end gap-3 mt-5"><button id="cancelFacturarModal" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button id="confirmEmitirFactura" class="px-4 py-2 bg-green-600 text-white rounded">Emitir Factura</button></div></div></div>
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print"><div class="bg-white rounded-xl w-full max-w-md p-6"><div class="flex gap-3"><div id="confirmIconWrap" class="confirm-icon confirm-warning"><i id="confirmIcon" class="fas fa-triangle-exclamation"></i></div><div><h3 id="confirmTitle" class="text-lg font-bold text-gray-800">Confirmar acción</h3><p id="confirmMessage" class="text-sm text-gray-600 mt-1"></p></div></div><div class="flex justify-end gap-3 mt-6"><button id="confirmCancelBtn" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button><button id="confirmAcceptBtn" class="px-4 py-2 bg-amber-600 text-white rounded">Confirmar</button></div></div></div>
 
 <script>
     const DB_NAME = 'CRM_INVENTARIO_V2';
@@ -265,6 +270,53 @@
         setTimeout(removeToast, timeout);
     }
 
+    let pendingConfirmResolver = null;
+    function closeConfirmModal(answer) {
+        const modal = document.getElementById('confirmModal');
+        if (modal) modal.classList.add('hidden');
+        if (pendingConfirmResolver) {
+            pendingConfirmResolver(answer);
+            pendingConfirmResolver = null;
+        }
+    }
+
+    function confirmDialog(message, options = {}) {
+        if (pendingConfirmResolver) closeConfirmModal(false);
+        const modal = document.getElementById('confirmModal');
+        const titleEl = document.getElementById('confirmTitle');
+        const messageEl = document.getElementById('confirmMessage');
+        const iconWrap = document.getElementById('confirmIconWrap');
+        const iconEl = document.getElementById('confirmIcon');
+        const acceptBtn = document.getElementById('confirmAcceptBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        if (!modal || !titleEl || !messageEl || !iconWrap || !iconEl || !acceptBtn || !cancelBtn) {
+            return Promise.resolve(false);
+        }
+
+        const tone = ['warning', 'danger', 'info'].includes(options.tone) ? options.tone : 'warning';
+        const uiByTone = {
+            warning: { iconClass: 'fa-triangle-exclamation', iconWrapClass: 'confirm-warning', acceptBtnClass: 'bg-amber-600 text-white' },
+            danger: { iconClass: 'fa-circle-exclamation', iconWrapClass: 'confirm-danger', acceptBtnClass: 'bg-red-600 text-white' },
+            info: { iconClass: 'fa-circle-info', iconWrapClass: 'confirm-info', acceptBtnClass: 'bg-blue-600 text-white' }
+        };
+        const ui = uiByTone[tone];
+
+        titleEl.textContent = options.title || 'Confirmar acción';
+        messageEl.textContent = String(message || '');
+        cancelBtn.textContent = options.cancelText || 'Cancelar';
+        acceptBtn.textContent = options.confirmText || 'Confirmar';
+
+        iconWrap.className = `confirm-icon ${ui.iconWrapClass}`;
+        iconEl.className = `fas ${ui.iconClass}`;
+        acceptBtn.className = `px-4 py-2 rounded ${ui.acceptBtnClass}`;
+        cancelBtn.className = 'px-4 py-2 bg-gray-200 rounded';
+
+        modal.classList.remove('hidden');
+        return new Promise(resolve => {
+            pendingConfirmResolver = resolve;
+        });
+    }
+
     async function renderClients() {
         currentClients = await getClients();
         const search = document.getElementById('searchClient')?.value.toLowerCase() || '';
@@ -293,7 +345,8 @@
     };
 
     window.removeClient = async (id) => {
-        if (!confirm('Eliminar cliente y todas sus órdenes, facturas?')) return;
+        const accepted = await confirmDialog('Se eliminará el cliente junto con todas sus órdenes y facturas.', { title: 'Eliminar cliente', confirmText: 'Eliminar', tone: 'danger' });
+        if (!accepted) return;
         const acts = await getActivities();
         for (const a of acts.filter(item => item.clientId === id)) {
             for (const mat of (a.materiales || [])) {
@@ -338,9 +391,11 @@
     };
 
     window.deleteProducto = async (id) => {
-        if (!confirm('Eliminar producto?')) return;
+        const accepted = await confirmDialog('¿Eliminar este producto del inventario?', { title: 'Eliminar producto', confirmText: 'Eliminar', tone: 'danger' });
+        if (!accepted) return;
         await deleteProductoById(id);
         await refreshAll();
+        showToast('Producto eliminado', 'success');
     };
 
     async function actualizarStock(productoId, cantidad, motivo, actividadId = null) {
@@ -470,17 +525,20 @@
     };
 
     window.deleteActivityAction = async (id) => {
-        if (!confirm('Eliminar orden? Se liberará el stock de materiales consumidos')) return;
+        const accepted = await confirmDialog('Se eliminará la orden y se devolverá al inventario el stock consumido.', { title: 'Eliminar orden', confirmText: 'Eliminar', tone: 'danger' });
+        if (!accepted) return;
         const act = currentActivities.find(a => a.id === id);
         if (act && act.materiales) {
             for (const mat of act.materiales) await actualizarStock(mat.productoId, mat.cantidad, 'Devolución por eliminación orden', id);
         }
         await deleteActivity(id);
         await refreshAll();
+        showToast('Orden eliminada', 'success');
     };
 
     window.reopenActivity = async (id) => {
-        if (!confirm('Reabrir orden? Se borrará firma de cierre, el stock no se modifica')) return;
+        const accepted = await confirmDialog('Se eliminará la firma de cierre y la orden volverá a estado en progreso.', { title: 'Reabrir orden', confirmText: 'Reabrir', tone: 'warning' });
+        if (!accepted) return;
         const act = currentActivities.find(a => a.id === id);
         if (!act) return;
         act.completed = false;
@@ -821,9 +879,11 @@
     };
 
     window.eliminarFactura = async (id) => {
-        if (!confirm('Eliminar factura?')) return;
+        const accepted = await confirmDialog('Esta acción eliminará la factura seleccionada.', { title: 'Eliminar factura', confirmText: 'Eliminar', tone: 'danger' });
+        if (!accepted) return;
         await deleteFactura(id);
         await refreshAll();
+        showToast('Factura eliminada', 'success');
     };
 
     async function actualizarDashboard() {
@@ -862,7 +922,7 @@
         const events = acts.map(act => ({ title: act.description?.substring(0, 30) || 'Orden', start: act.startDate || undefined, end: act.endDate || undefined, backgroundColor: act.completed ? '#10b981' : '#f59e0b', extendedProps: { id: act.id } }));
         const calendarEl = document.getElementById('calendar');
         if (calendar) calendar.destroy();
-        calendar = new FullCalendar.Calendar(calendarEl, { initialView: 'dayGridMonth', events, headerToolbar: { left: 'prev,next', center: 'title', right: 'dayGridMonth,timeGridWeek' }, eventClick: (info) => { if (confirm('Ver acta de inicio?')) viewActaInicio(info.event.extendedProps.id); } });
+        calendar = new FullCalendar.Calendar(calendarEl, { initialView: 'dayGridMonth', events, headerToolbar: { left: 'prev,next', center: 'title', right: 'dayGridMonth,timeGridWeek' }, eventClick: async (info) => { const accepted = await confirmDialog('¿Deseas abrir el acta de inicio de esta orden?', { title: 'Ver acta', confirmText: 'Abrir', tone: 'info' }); if (accepted) viewActaInicio(info.event.extendedProps.id); } });
         calendar.render();
     }
 
@@ -1022,6 +1082,14 @@
     document.getElementById('closeActivityModalBtn')?.addEventListener('click', () => document.getElementById('activityModal').classList.add('hidden'));
     document.getElementById('closeActaModal')?.addEventListener('click', () => document.getElementById('actaModal').classList.add('hidden'));
     document.getElementById('cancelCloseModal')?.addEventListener('click', () => document.getElementById('closeOrderModal').classList.add('hidden'));
+    document.getElementById('confirmCancelBtn')?.addEventListener('click', () => closeConfirmModal(false));
+    document.getElementById('confirmAcceptBtn')?.addEventListener('click', () => closeConfirmModal(true));
+    document.getElementById('confirmModal')?.addEventListener('click', (e) => { if (e.target?.id === 'confirmModal') closeConfirmModal(false); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        const confirmModal = document.getElementById('confirmModal');
+        if (confirmModal && !confirmModal.classList.contains('hidden')) closeConfirmModal(false);
+    });
     document.getElementById('addPaymentMade')?.addEventListener('click', () => addPaymentRow(document.getElementById('paymentsMadeContainer')));
     document.getElementById('addPendingPayment')?.addEventListener('click', () => addPaymentRow(document.getElementById('pendingPaymentsContainer')));
     document.getElementById('addMaterialBtn')?.addEventListener('click', () => addMaterialRow(document.getElementById('materialesContainer')));
