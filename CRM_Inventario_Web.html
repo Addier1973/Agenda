@@ -216,6 +216,15 @@
         }
     }
 
+    function setButtonLoading(button, isLoading, loadingHtml) {
+        if (!button) return;
+        if (!button.dataset.originalHtml) button.dataset.originalHtml = button.innerHTML;
+        button.disabled = isLoading;
+        button.classList.toggle('opacity-70', isLoading);
+        button.classList.toggle('cursor-not-allowed', isLoading);
+        button.innerHTML = isLoading ? loadingHtml : button.dataset.originalHtml;
+    }
+
     async function renderClients() {
         currentClients = await getClients();
         const search = document.getElementById('searchClient')?.value.toLowerCase() || '';
@@ -501,12 +510,15 @@
     }
 
     async function saveActivityFromModal() {
+        const saveBtn = document.getElementById('saveActivityBtn');
+        if (saveBtn?.disabled) return;
         const id = document.getElementById('activityId').value;
         const clientId = parseInt(document.getElementById('activityClientId').value, 10);
         const description = document.getElementById('activityDescription').value.trim();
         const startDate = document.getElementById('activityStartDate').value;
         if (!clientId || !description || !startDate) { alert('Complete cliente, descripción y fecha de inicio'); return; }
 
+        setButtonLoading(saveBtn, true, '<i class="fas fa-spinner fa-spin"></i> Guardando...');
         showLoading(true);
         try {
             const currentPhotos = Array.from(document.querySelectorAll('#photosPreview .photo-item img')).map(img => img.src);
@@ -559,6 +571,7 @@
             await refreshAll();
         } finally {
             showLoading(false);
+            setButtonLoading(saveBtn, false, '');
         }
     }
 
@@ -582,12 +595,14 @@
         if (!act) { alert('Orden no encontrada'); return; }
         const client = currentClients.find(c => c.id === act.clientId);
         const manoObra = Number(act.total) || 0;
+        const clientName = client?.name ? escapeHtml(client.name) : 'N/A';
+        const clientAddress = client?.address ? escapeHtml(client.address) : '';
         const materialesHtml = (act.materiales || []).map(m => {
             const cantidad = Number(m.cantidad) || 0;
             const precioUnitario = Number(m.precioUnitario) || 0;
-            return `<li>${m.nombreProducto} x${cantidad} = $${(cantidad * precioUnitario).toFixed(2)}</li>`;
+            return `<li>${escapeHtml(m.nombreProducto || '')} x${cantidad} = $${(cantidad * precioUnitario).toFixed(2)}</li>`;
         }).join('');
-        const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE INICIO / ORDEN DE SERVICIO</h2><p><strong>Cliente:</strong> ${client?.name} - ${client?.address || ''}</p><p><strong>Fecha inicio:</strong> ${act.startDate}</p><p><strong>Descripción:</strong> ${escapeHtml(act.description)}</p><p><strong>Mano de obra total:</strong> $${manoObra.toFixed(2)}</p><p><strong>Materiales:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><div class="mt-6">_________________________<br>Firma responsable</div></div>`;
+        const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE INICIO / ORDEN DE SERVICIO</h2><p><strong>Cliente:</strong> ${clientName} - ${clientAddress}</p><p><strong>Fecha inicio:</strong> ${act.startDate}</p><p><strong>Descripción:</strong> ${escapeHtml(act.description)}</p><p><strong>Mano de obra total:</strong> $${manoObra.toFixed(2)}</p><p><strong>Materiales:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><div class="mt-6">_________________________<br>Firma responsable</div></div>`;
         showActaModal(html);
     }
 
@@ -596,13 +611,14 @@
         if (!act) { alert('Orden no encontrada'); return; }
         if (!act.completed) { alert('No finalizada'); return; }
         const client = currentClients.find(c => c.id === act.clientId);
+        const clientName = client?.name ? escapeHtml(client.name) : 'N/A';
         const signatureImg = act.completionSignature ? `<img src="${act.completionSignature}" style="max-width:200px;">` : '<p>Sin firma</p>';
         const materialesHtml = (act.materiales || []).map(m => {
             const cantidad = Number(m.cantidad) || 0;
             const precioUnitario = Number(m.precioUnitario) || 0;
-            return `<li>${m.nombreProducto} x${cantidad} = $${(cantidad * precioUnitario).toFixed(2)}</li>`;
+            return `<li>${escapeHtml(m.nombreProducto || '')} x${cantidad} = $${(cantidad * precioUnitario).toFixed(2)}</li>`;
         }).join('');
-        const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE FIN Y ACEPTACIÓN</h2><p><strong>Cliente:</strong> ${client?.name}</p><p><strong>Orden:</strong> ${escapeHtml(act.description)}</p><p><strong>Fecha cierre:</strong> ${act.completionDate}</p><p><strong>Materiales utilizados:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><p><strong>Firma del cliente:</strong><br>${signatureImg}</p><div class="mt-4">El cliente acepta la finalización.</div></div>`;
+        const html = `<div class="print-acta"><h2 class="text-2xl font-bold">ACTA DE FIN Y ACEPTACIÓN</h2><p><strong>Cliente:</strong> ${clientName}</p><p><strong>Orden:</strong> ${escapeHtml(act.description)}</p><p><strong>Fecha cierre:</strong> ${act.completionDate}</p><p><strong>Materiales utilizados:</strong><ul>${materialesHtml || '<li>Ninguno</li>'}</ul></p><p><strong>Firma del cliente:</strong><br>${signatureImg}</p><div class="mt-4">El cliente acepta la finalización.</div></div>`;
         showActaModal(html);
     }
 
@@ -636,7 +652,8 @@
         const client = currentClients.find(c => c.id === act.clientId);
         const costoMateriales = (act.materiales || []).reduce((s, m) => s + (Number(m.cantidad) || 0) * (Number(m.precioUnitario) || 0), 0);
         const manoObra = Number(act.total) || 0;
-        document.getElementById('closeActivityInfo').innerHTML = `<strong>${escapeHtml(act.description)}</strong><br>Cliente: ${client?.name}<br>Total Mano Obra: $${manoObra}<br>Materiales: $${costoMateriales}`;
+        const clientName = client?.name ? escapeHtml(client.name) : 'N/A';
+        document.getElementById('closeActivityInfo').innerHTML = `<strong>${escapeHtml(act.description)}</strong><br>Cliente: ${clientName}<br>Total Mano Obra: $${manoObra}<br>Materiales: $${costoMateriales}`;
         document.getElementById('closeOrderModal').classList.remove('hidden');
         const canvas = document.getElementById('signatureCanvas');
         requestAnimationFrame(() => {
@@ -663,13 +680,19 @@
     window.facturarActividad = async (actId) => {
         const act = currentActivities.find(a => a.id === actId);
         if (!act) return;
+        const facturas = await getFacturas();
+        const existingFactura = facturas.find(f => Number(f.actividadId) === Number(act.id));
+        if (existingFactura) {
+            alert(`Esta orden ya tiene una factura emitida (${existingFactura.numero || 'sin número'}).`);
+            return;
+        }
         actividadParaFacturar = act;
         const client = currentClients.find(c => c.id === act.clientId);
+        const clientName = client?.name ? escapeHtml(client.name) : 'N/A';
         const costoMateriales = (act.materiales || []).reduce((s, m) => s + (Number(m.cantidad) || 0) * (Number(m.precioUnitario) || 0), 0);
         const baseManoObra = Number(act.total) || 0;
         const baseTotal = baseManoObra + costoMateriales;
-        document.getElementById('facturarActividadInfo').innerHTML = `Orden: ${escapeHtml(act.description)}<br>Cliente: ${client?.name}<br>Mano Obra: $${baseManoObra}<br>Materiales: $${costoMateriales}`;
-        const facturas = await getFacturas();
+        document.getElementById('facturarActividadInfo').innerHTML = `Orden: ${escapeHtml(act.description)}<br>Cliente: ${clientName}<br>Mano Obra: $${baseManoObra}<br>Materiales: $${costoMateriales}`;
         const anio = new Date().getFullYear();
         const num = facturas.filter(f => f.numero && f.numero.startsWith(`F-${anio}`)).length + 1;
         document.getElementById('facturaNumero').value = `F-${anio}-${num.toString().padStart(4, '0')}`;
@@ -677,36 +700,51 @@
         document.getElementById('facturaBaseManoObra').value = baseManoObra.toFixed(2);
         document.getElementById('facturaBaseMateriales').value = costoMateriales.toFixed(2);
         document.getElementById('facturaBase').value = baseTotal.toFixed(2);
-        document.getElementById('facturaIvaPorcentaje').value = empresaData.iva;
-        document.getElementById('facturaTotal').value = (baseTotal * (1 + empresaData.iva / 100)).toFixed(2);
+        const ivaInicial = Math.max(0, Math.min(100, Number(empresaData.iva) || 0));
+        document.getElementById('facturaIvaPorcentaje').value = ivaInicial;
+        document.getElementById('facturaTotal').value = (baseTotal * (1 + ivaInicial / 100)).toFixed(2);
         document.getElementById('facturarModal').classList.remove('hidden');
     };
 
     document.getElementById('cancelFacturarModal').onclick = () => document.getElementById('facturarModal').classList.add('hidden');
     document.getElementById('facturaIvaPorcentaje').addEventListener('input', function () {
         const base = parseFloat(document.getElementById('facturaBase').value) || 0;
-        const iva = parseFloat(this.value) || 0;
+        const iva = Math.max(0, Math.min(100, parseFloat(this.value) || 0));
+        this.value = iva;
         document.getElementById('facturaTotal').value = (base * (1 + iva / 100)).toFixed(2);
     });
     document.getElementById('confirmEmitirFactura').onclick = async () => {
+        const emitBtn = document.getElementById('confirmEmitirFactura');
+        if (emitBtn?.disabled) return;
         if (!actividadParaFacturar) return;
+        const fechaFactura = document.getElementById('facturaFecha').value;
+        if (!fechaFactura) { alert('La fecha de factura es obligatoria.'); return; }
+        const existing = (await getFacturas()).find(f => Number(f.actividadId) === Number(actividadParaFacturar.id));
+        if (existing) { alert(`Ya existe una factura para esta orden: ${existing.numero || 'sin número'}`); return; }
+        setButtonLoading(emitBtn, true, '<i class="fas fa-spinner fa-spin"></i> Emitiendo...');
+        const ivaVal = Math.max(0, Math.min(100, parseFloat(document.getElementById('facturaIvaPorcentaje').value) || 0));
+        document.getElementById('facturaIvaPorcentaje').value = ivaVal;
         const factura = {
             id: undefined,
             numero: document.getElementById('facturaNumero').value,
-            fecha: document.getElementById('facturaFecha').value,
+            fecha: fechaFactura,
             clientId: actividadParaFacturar.clientId,
             actividadId: actividadParaFacturar.id,
             baseManoObra: parseFloat(document.getElementById('facturaBaseManoObra').value),
             baseMateriales: parseFloat(document.getElementById('facturaBaseMateriales').value),
             base: parseFloat(document.getElementById('facturaBase').value),
-            ivaPorcentaje: parseFloat(document.getElementById('facturaIvaPorcentaje').value),
+            ivaPorcentaje: ivaVal,
             total: parseFloat(document.getElementById('facturaTotal').value),
             emitida: new Date().toISOString()
         };
-        await saveFactura(factura);
-        document.getElementById('facturarModal').classList.add('hidden');
-        await refreshAll();
-        alert(`Factura ${factura.numero} emitida`);
+        try {
+            await saveFactura(factura);
+            document.getElementById('facturarModal').classList.add('hidden');
+            await refreshAll();
+            alert(`Factura ${factura.numero} emitida`);
+        } finally {
+            setButtonLoading(emitBtn, false, '');
+        }
     };
 
     async function renderFacturas() {
@@ -908,8 +946,11 @@
     });
 
     document.getElementById('saveClientBtn')?.addEventListener('click', async () => {
+        const saveBtn = document.getElementById('saveClientBtn');
+        if (saveBtn?.disabled) return;
         const name = document.getElementById('clientName').value.trim();
         if (!name) return alert('Nombre requerido');
+        setButtonLoading(saveBtn, true, '<i class="fas fa-spinner fa-spin"></i> Guardando...');
         const clientId = document.getElementById('clientId').value ? parseInt(document.getElementById('clientId').value, 10) : undefined;
         let photo = null;
         if (document.getElementById('clientPhoto').files[0]) photo = await fileToBase64(document.getElementById('clientPhoto').files[0]);
@@ -917,18 +958,22 @@
             const existing = currentClients.find(c => c.id === clientId);
             photo = existing?.photo || null;
         }
-        const client = {
-            id: clientId,
-            name,
-            address: document.getElementById('clientAddress').value,
-            phone: document.getElementById('clientPhone').value,
-            email: document.getElementById('clientEmail').value,
-            photo
-        };
-        await saveClient(client);
-        document.getElementById('clientModal').classList.add('hidden');
-        await refreshAll();
-        if (!document.getElementById('clientesSection').classList.contains('hidden-section')) renderClients();
+        try {
+            const client = {
+                id: clientId,
+                name,
+                address: document.getElementById('clientAddress').value,
+                phone: document.getElementById('clientPhone').value,
+                email: document.getElementById('clientEmail').value,
+                photo
+            };
+            await saveClient(client);
+            document.getElementById('clientModal').classList.add('hidden');
+            await refreshAll();
+            if (!document.getElementById('clientesSection').classList.contains('hidden-section')) renderClients();
+        } finally {
+            setButtonLoading(saveBtn, false, '');
+        }
     });
 
     document.getElementById('closeClientModal')?.addEventListener('click', () => document.getElementById('clientModal').classList.add('hidden'));
@@ -951,15 +996,22 @@
         document.getElementById('productoModal').classList.remove('hidden');
     });
     document.getElementById('saveProductoBtn')?.addEventListener('click', async () => {
+        const saveBtn = document.getElementById('saveProductoBtn');
+        if (saveBtn?.disabled) return;
         const nombre = document.getElementById('productoNombre').value.trim();
         if (!nombre) return alert('Nombre requerido');
+        setButtonLoading(saveBtn, true, '<i class="fas fa-spinner fa-spin"></i> Guardando...');
         const stock = parseInt(document.getElementById('productoStock').value, 10) || 0;
         const precio = parseFloat(document.getElementById('productoPrecio').value) || 0;
-        const producto = { id: document.getElementById('productoId').value ? parseInt(document.getElementById('productoId').value, 10) : undefined, nombre, stock, precio };
-        await saveProducto(producto);
-        document.getElementById('productoModal').classList.add('hidden');
-        await refreshAll();
-        renderInventario();
+        try {
+            const producto = { id: document.getElementById('productoId').value ? parseInt(document.getElementById('productoId').value, 10) : undefined, nombre, stock, precio };
+            await saveProducto(producto);
+            document.getElementById('productoModal').classList.add('hidden');
+            await refreshAll();
+            renderInventario();
+        } finally {
+            setButtonLoading(saveBtn, false, '');
+        }
     });
     document.getElementById('closeProductoModal')?.addEventListener('click', () => document.getElementById('productoModal').classList.add('hidden'));
     document.getElementById('saveActivityBtn')?.addEventListener('click', saveActivityFromModal);
